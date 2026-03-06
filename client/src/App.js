@@ -1,27 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 
-// ===== 더미 데이터 =====
-const DUMMY_PRICES = [
-  { id: 1, category: '곡물', item_name: '밀가루 (강력분)', price: 42000, unit: '25kg/포', change_rate: 1.2, recorded_date: '2026-03-04' },
-  { id: 2, category: '곡물', item_name: '쌀 (일반미)', price: 58000, unit: '20kg/포', change_rate: -0.5, recorded_date: '2026-03-04' },
-  { id: 3, category: '곡물', item_name: '옥수수 (사료용)', price: 320, unit: 'kg', change_rate: 2.1, recorded_date: '2026-03-04' },
-  { id: 4, category: '곡물', item_name: '대두', price: 580, unit: 'kg', change_rate: -1.3, recorded_date: '2026-03-04' },
-  { id: 5, category: '유지류', item_name: '대두유', price: 1850, unit: 'L', change_rate: 0.8, recorded_date: '2026-03-04' },
-  { id: 6, category: '유지류', item_name: '팜유', price: 1420, unit: 'L', change_rate: -0.3, recorded_date: '2026-03-04' },
-  { id: 7, category: '당류', item_name: '백설탕', price: 1200, unit: 'kg', change_rate: 1.5, recorded_date: '2026-03-04' },
-  { id: 8, category: '당류', item_name: '물엿', price: 980, unit: 'kg', change_rate: 0.0, recorded_date: '2026-03-04' },
-  { id: 9, category: '축산', item_name: '돼지고기 (삼겹살)', price: 18500, unit: 'kg', change_rate: 3.2, recorded_date: '2026-03-04' },
-  { id: 10, category: '축산', item_name: '닭고기 (통닭)', price: 6800, unit: 'kg', change_rate: -1.1, recorded_date: '2026-03-04' },
-  { id: 11, category: '축산', item_name: '소고기 (한우 1++)', price: 98000, unit: 'kg', change_rate: 0.5, recorded_date: '2026-03-04' },
-  { id: 12, category: '수산', item_name: '새우 (흰다리)', price: 12000, unit: 'kg', change_rate: -2.0, recorded_date: '2026-03-04' },
-  { id: 13, category: '유제품', item_name: '원유', price: 1120, unit: 'L', change_rate: 0.0, recorded_date: '2026-03-04' },
-  { id: 14, category: '유제품', item_name: '버터', price: 9800, unit: 'kg', change_rate: 1.8, recorded_date: '2026-03-04' },
-  { id: 15, category: '포장재', item_name: 'PE필름', price: 3200, unit: 'kg', change_rate: 0.7, recorded_date: '2026-03-04' },
-  { id: 16, category: '포장재', item_name: '골판지', price: 850, unit: 'm²', change_rate: -0.4, recorded_date: '2026-03-04' },
-];
+// ===== 설정 =====
+// Railway 백엔드 주소 (본인 주소로 변경하세요)
+const API_BASE = 'https://food-community-production.up.railway.app';
 
+// ===== 더미 데이터 (뉴스, 자유게시판, 댓글 — 나중에 DB 연동 시 교체) =====
 const DUMMY_NEWS = [
   { id: 1, title: '[속보] 식약처, HACCP 인증기준 개정안 발표', nickname: '관리자', company_name: '식품안전뉴스', created_at: '2026-03-04T09:00:00', views: 342, comment_count: 12, content: '식품의약품안전처는 3월 4일 HACCP 인증기준 개정안을 발표했습니다. 주요 변경사항으로는 소규모 업체에 대한 인증 절차 간소화, AI 기반 모니터링 시스템 도입 의무화 등이 포함되어 있습니다.\n\n특히 연매출 1억 미만 소규모 식품제조업체의 경우, 기존 7단계였던 인증 절차가 4단계로 줄어들어 행정 부담이 크게 감소할 것으로 예상됩니다.' },
   { id: 2, title: '2026년 식품산업 트렌드: AI 품질관리 도입 급증', nickname: '푸드테크저널', company_name: '', created_at: '2026-03-03T14:30:00', views: 289, comment_count: 8, content: '올해 식품 제조업계에서 가장 눈에 띄는 변화는 AI 기반 품질관리 시스템의 도입입니다.\n\n대기업뿐만 아니라 중소 제조업체에서도 이미지 인식을 활용한 불량 검출, 공정 데이터 분석을 통한 최적 조건 예측 등을 적극 도입하고 있습니다.' },
@@ -69,43 +54,103 @@ function Header() {
   );
 }
 
-// ===== 원자재 시세 =====
-function PriceBoard() {
-  const grouped = DUMMY_PRICES.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
-    return acc;
-  }, {});
+// ===== 원자재 시세 (KAMIS API 연동) =====
+function PriceBoard({ priceData, loading, error, onRefresh }) {
+  if (loading) {
+    return (
+      <div className="price-board">
+        <h2>📊 오늘의 원자재 시세</h2>
+        <p style= textAlign: 'center', padding: '40px' >🔄 KAMIS에서 가격 정보를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="price-board">
+        <h2>📊 오늘의 원자재 시세</h2>
+        <p style= textAlign: 'center', padding: '40px', color: '#e74c3c' >
+          ❌ {error}
+        </p>
+        <button onClick={onRefresh} style= display: 'block', margin: '0 auto', padding: '8px 20px', cursor: 'pointer' >
+          🔄 다시 시도
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="price-board">
-      <h2>📊 오늘의 원자재 시세</h2>
-      <p className="price-date">기준일: 2026-03-04</p>
-      {Object.entries(grouped).map(([category, items]) => (
-        <div key={category} className="price-category">
-          <h3>{category}</h3>
+      <div style= display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' >
+        <h2>📊 오늘의 원자재 시세</h2>
+        <button onClick={onRefresh} style= padding: '4px 12px', cursor: 'pointer', border: '1px solid #ddd', borderRadius: '4px', background: '#fff' >
+          🔄 새로고침
+        </button>
+      </div>
+      {priceData.updatedAt && (
+        <p className="price-date">기준: {new Date(priceData.updatedAt).toLocaleString('ko-KR')}</p>
+      )}
+
+      {/* 곡물 (식량작물) */}
+      {priceData.grains && priceData.grains.length > 0 && (
+        <div className="price-category">
+          <h3>🌾 곡물 (식량작물)</h3>
           <table className="price-table">
             <thead>
-              <tr><th>품목</th><th>가격</th><th>단위</th><th>등락률</th></tr>
+              <tr><th>품목</th><th>품종</th><th>가격</th><th>단위</th><th>등락률</th></tr>
             </thead>
             <tbody>
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td>{item.item_name}</td>
-                  <td className="price-value">{Number(item.price).toLocaleString()}</td>
+              {priceData.grains.map((item, idx) => (
+                <tr key={idx}>
+                  <td>{item.name}</td>
+                  <td>{item.kind}</td>
+                  <td className="price-value">{item.price}</td>
                   <td>{item.unit}</td>
-                  <td className={`change ${item.change_rate > 0 ? 'up' : item.change_rate < 0 ? 'down' : ''}`}>
-                    {item.change_rate > 0 ? '▲' : item.change_rate < 0 ? '▼' : '-'}
-                    {item.change_rate ? ` ${Math.abs(item.change_rate)}%` : ''}
+                  <td className={`change ${getChangeClass(item.changeRate)}`}>
+                    {item.changeRate}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      ))}
+      )}
+
+      {/* 과일 */}
+      {priceData.fruits && priceData.fruits.length > 0 && (
+        <div className="price-category">
+          <h3>🍎 과일</h3>
+          <table className="price-table">
+            <thead>
+              <tr><th>품목</th><th>품종</th><th>가격</th><th>단위</th><th>등락률</th></tr>
+            </thead>
+            <tbody>
+              {priceData.fruits.map((item, idx) => (
+                <tr key={idx}>
+                  <td>{item.name}</td>
+                  <td>{item.kind}</td>
+                  <td className="price-value">{item.price}</td>
+                  <td>{item.unit}</td>
+                  <td className={`change ${getChangeClass(item.changeRate)}`}>
+                    {item.changeRate}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
+}
+
+// 등락률 CSS 클래스
+function getChangeClass(rate) {
+  if (typeof rate === 'string') {
+    if (rate.startsWith('+')) return 'up';
+    if (rate.startsWith('-')) return 'down';
+  }
+  return '';
 }
 
 // ===== 게시판 =====
@@ -201,6 +246,7 @@ function PostDetail() {
 // ===== 로그인 =====
 function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
+
   return (
     <div className="login-page">
       <h2>{isRegister ? '회원가입' : '로그인'}</h2>
@@ -229,9 +275,35 @@ function LoginPage() {
   );
 }
 
-// ===== 홈페이지 =====
-function HomePage() {
+// ===== 홈페이지 (KAMIS 데이터 미리보기 포함) =====
+function HomePage({ priceData, priceLoading }) {
   const navigate = useNavigate();
+
+  // API 데이터를 홈 미리보기용 포맷으로 변환
+  const previewItems = [];
+  if (priceData.grains) {
+    priceData.grains.slice(0, 4).forEach(item => {
+      previewItems.push({
+        id: `grain-${item.name}`,
+        item_name: `${item.name} (${item.kind})`,
+        price: item.price,
+        unit: item.unit,
+        changeRate: item.changeRate,
+      });
+    });
+  }
+  if (priceData.fruits) {
+    priceData.fruits.slice(0, 4).forEach(item => {
+      previewItems.push({
+        id: `fruit-${item.name}`,
+        item_name: `${item.name} (${item.kind})`,
+        price: item.price,
+        unit: item.unit,
+        changeRate: item.changeRate,
+      });
+    });
+  }
+
   return (
     <div className="homepage">
       <section className="section">
@@ -240,16 +312,21 @@ function HomePage() {
           <Link to="/prices">전체보기 →</Link>
         </div>
         <div className="price-preview">
-          {DUMMY_PRICES.slice(0, 8).map(item => (
-            <div key={item.id} className="price-card">
-              <div className="price-item-name">{item.item_name}</div>
-              <div className="price-value">{Number(item.price).toLocaleString()} {item.unit}</div>
-              <div className={`change ${item.change_rate > 0 ? 'up' : item.change_rate < 0 ? 'down' : ''}`}>
-                {item.change_rate > 0 ? '▲' : item.change_rate < 0 ? '▼' : '-'}
-                {item.change_rate ? ` ${Math.abs(item.change_rate)}%` : ''}
+          {priceLoading ? (
+            <p style= padding: '20px', textAlign: 'center' >🔄 불러오는 중...</p>
+          ) : previewItems.length > 0 ? (
+            previewItems.map(item => (
+              <div key={item.id} className="price-card">
+                <div className="price-item-name">{item.item_name}</div>
+                <div className="price-value">{item.price} {item.unit}</div>
+                <div className={`change ${getChangeClass(item.changeRate)}`}>
+                  {item.changeRate}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p style= padding: '20px', textAlign: 'center' >가격 정보를 불러오지 못했습니다.</p>
+          )}
         </div>
       </section>
 
@@ -268,7 +345,6 @@ function HomePage() {
             ))}
           </ul>
         </section>
-
         <section className="section">
           <div className="section-header">
             <h2>💬 자유게시판</h2>
@@ -296,13 +372,40 @@ function BoardWrapper() {
 
 // ===== 메인 App =====
 function App() {
+  const [priceData, setPriceData] = useState({ grains: [], fruits: [] });
+  const [priceLoading, setPriceLoading] = useState(true);
+  const [priceError, setPriceError] = useState(null);
+
+  const fetchPrices = () => {
+    setPriceLoading(true);
+    setPriceError(null);
+    fetch(`${API_BASE}/api/kamis/prices`)
+      .then(res => {
+        if (!res.ok) throw new Error('서버 응답 오류');
+        return res.json();
+      })
+      .then(data => {
+        setPriceData(data);
+        setPriceLoading(false);
+      })
+      .catch(err => {
+        console.error('KAMIS 가격 로딩 실패:', err);
+        setPriceError('가격 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+        setPriceLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchPrices();
+  }, []);
+
   return (
     <Router>
       <Header />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/prices" element={<PriceBoard />} />
+          <Route path="/" element={<HomePage priceData={priceData} priceLoading={priceLoading} />} />
+          <Route path="/prices" element={<PriceBoard priceData={priceData} loading={priceLoading} error={priceError} onRefresh={fetchPrices} />} />
           <Route path="/board/:type" element={<BoardWrapper />} />
           <Route path="/post/:id" element={<PostDetail />} />
           <Route path="/login" element={<LoginPage />} />

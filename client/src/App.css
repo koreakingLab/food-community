@@ -165,3 +165,90 @@ a { text-decoration: none; color: inherit; }
   .board-previews { grid-template-columns: 1fr; }
   .nav { gap: 12px; font-size: 12px; }
 }
+
+/* 가격 테이블 스타일 */
+.price-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.price-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.price-header h2 {
+  margin: 0;
+}
+
+.updated-at {
+  color: #888;
+  font-size: 14px;
+}
+
+.refresh-btn {
+  padding: 6px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.refresh-btn:hover {
+  background: #f0f0f0;
+}
+
+.price-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+
+.price-table th,
+.price-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.price-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  font-size: 14px;
+  color: #555;
+}
+
+.price-table td.price {
+  font-weight: 600;
+}
+
+.rate-up {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.rate-down {
+  color: #2980b9;
+  font-weight: 600;
+}
+
+.rate-same {
+  color: #888;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+}
+
+.error {
+  text-align: center;
+  padding: 40px;
+  color: #e74c3c;
+}
