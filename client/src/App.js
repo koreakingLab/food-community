@@ -5,15 +5,19 @@ import './App.css';
 const API_BASE = 'https://food-community-production.up.railway.app';
 
 const DUMMY_NEWS = [
-  { id: 1, title: '2026년 식품 제조 트렌드 전망', author: '관리자', date: '2026-03-01', content: '올해 식품 제조 업계에서는 자동화와 친환경 패키징이 핵심 트렌드로...' },
-  { id: 2, title: 'HACCP 인증 간소화 방안 발표', author: '관리자', date: '2026-02-28', content: '식약처에서 중소 식품 제조업체를 위한 HACCP 인증 간소화 방안을...' },
-  { id: 3, title: '식품 원자재 가격 동향 리포트', author: '관리자', date: '2026-02-25', content: '최근 3개월간 주요 식품 원자재 가격 동향을 분석한 결과...' },
+  { id: 1, title: '[속보] 식약처, HACCP 인증기준 개정안 발표', date: '2026. 3. 4.' },
+  { id: 2, title: '2026년 식품산업 트렌드: AI 품질관리 도입 급증', date: '2026. 3. 3.' },
+  { id: 3, title: '밀가루 가격 3개월 연속 상승세...제빵업계 비상', date: '2026. 3. 2.' },
+  { id: 4, title: '중소기업 식품공장 설비지원 사업 공고 (2026 상반기)', date: '2026. 3. 1.' },
+  { id: 5, title: '친환경 포장재 의무화 로드맵 발표...2028년부터 단계적 시행', date: '2026. 2. 28.' },
 ];
 
 const DUMMY_FREE = [
-  { id: 1, title: '소규모 식품 공장 창업 후기', author: '김사장', date: '2026-03-02', content: '작년에 소규모 식품 공장을 창업했는데, 경험담을 공유합니다...' },
-  { id: 2, title: '포장기계 추천 부탁드립니다', author: '박과장', date: '2026-03-01', content: '월 생산량 5톤 정도 되는 소스류 제조하는데 적합한 포장기계...' },
-  { id: 3, title: '식품 전시회 같이 가실 분?', author: '이대리', date: '2026-02-27', content: '다음 달 코엑스에서 열리는 식품 제조 장비 전시회 같이...' },
+  { id: 1, title: '소규모 소스 제조 시작하려는데 조언 부탁드립니다', date: '2026. 3. 4.' },
+  { id: 2, title: '충전기 추천 부탁합니다 (소스류, 시간당 500병)', date: '2026. 3. 3.' },
+  { id: 3, title: '식품공장 여름철 온도관리 팁 공유합니다', date: '2026. 3. 2.' },
+  { id: 4, title: 'OEM 제조 맡길 수 있는 업체 찾습니다 (건강기능식품)', date: '2026. 3. 1.' },
+  { id: 5, title: '라벨 프린터 자동화 후기 (비용 50% 절감)', date: '2026. 2. 28.' },
 ];
 
 const DUMMY_COMMENTS = [
@@ -25,36 +29,57 @@ const DUMMY_COMMENTS = [
 function Header() {
   return (
     <header className="header">
-      <Link to="/" className="header-logo">
-        <h1 className="header-title">🏭 식품업계 커뮤니티</h1>
-      </Link>
-      <nav className="header-nav">
-        <Link to="/board/news" className="nav-link">📰 업계뉴스</Link>
-        <Link to="/board/free" className="nav-link">💬 자유게시판</Link>
-        <Link to="/login" className="nav-login">로그인</Link>
-      </nav>
+      <div className="header-inner">
+        <Link to="/" className="header-logo">
+          <span className="logo-icon">🏭</span>
+          <span className="logo-text">식품업계 커뮤니티</span>
+        </Link>
+        <nav className="header-nav">
+          <Link to="/prices" className="nav-link">📊 원자재 시세</Link>
+          <Link to="/board/news" className="nav-link">📰 업계 뉴스</Link>
+          <Link to="/board/free" className="nav-link">💬 자유게시판</Link>
+        </nav>
+        <Link to="/login" className="btn-header-login">로그인</Link>
+      </div>
     </header>
   );
 }
 
-// ===== 원자재 시세 (KAMIS API) =====
-function PriceBoard({ priceData, loading, error, onRefresh }) {
+// ===== 시세 카드 1개 =====
+function PriceCard({ item }) {
+  const getDirectionClass = (direction) => {
+    if (direction === 'up') return 'card-rate rate-up';
+    if (direction === 'down') return 'card-rate rate-down';
+    return 'card-rate rate-same';
+  };
+
   const getArrow = (direction) => {
     if (direction === 'up') return '▲';
     if (direction === 'down') return '▼';
-    return '-';
+    return '';
   };
 
-  const getRateClass = (direction) => {
-    if (direction === 'up') return 'rate-up';
-    if (direction === 'down') return 'rate-down';
-    return 'rate-same';
-  };
+  return (
+    <div className="price-card">
+      <p className="card-name">{item.name} ({item.kind})</p>
+      <p className="card-price">
+        <strong>{item.price}</strong> <span className="card-unit">{item.unit}</span>
+      </p>
+      <p className={getDirectionClass(item.direction)}>
+        {getArrow(item.direction)} {item.changeRate}
+      </p>
+    </div>
+  );
+}
 
+// ===== 홈 - 시세 섹션 =====
+function PriceSection({ priceData, loading, error, onRefresh }) {
   if (loading) {
     return (
-      <section className="price-section">
-        <h2>📊 오늘의 원자재 시세</h2>
+      <section className="section-box">
+        <div className="section-header">
+          <h2 className="section-title">📊 오늘의 원자재 시세</h2>
+        </div>
         <p className="loading-text">⏳ 시세 정보를 불러오는 중...</p>
       </section>
     );
@@ -62,120 +87,133 @@ function PriceBoard({ priceData, loading, error, onRefresh }) {
 
   if (error) {
     return (
-      <section className="price-section">
-        <h2>📊 오늘의 원자재 시세</h2>
+      <section className="section-box">
+        <div className="section-header">
+          <h2 className="section-title">📊 오늘의 원자재 시세</h2>
+        </div>
         <p className="error-text">⚠️ {error}</p>
-        <button onClick={onRefresh} className="btn-refresh">다시 시도</button>
+        <button onClick={onRefresh} className="btn-retry">다시 시도</button>
       </section>
     );
   }
 
+  const allItems = [...(priceData?.grains || []), ...(priceData?.fruits || [])];
+
   return (
-    <section className="price-section">
-      <div className="price-header">
-        <h2>📊 오늘의 원자재 시세</h2>
-        <div className="price-meta">
-          {priceData?.updatedAt && (
-            <span className="update-time">
-              {new Date(priceData.updatedAt).toLocaleString('ko-KR')} 기준
-            </span>
-          )}
-          <button onClick={onRefresh} className="btn-refresh-small">🔄 새로고침</button>
-        </div>
+    <section className="section-box">
+      <div className="section-header">
+        <h2 className="section-title">📊 오늘의 원자재 시세</h2>
+        <Link to="/prices" className="section-more">전체보기 →</Link>
       </div>
 
       {priceData?.isFallback && (
         <p className="fallback-notice">⚠️ 이전 캐시 데이터를 표시 중입니다.</p>
       )}
 
-      <h3 className="category-title">🌾 곡물</h3>
-      <table className="price-table">
-        <thead>
-          <tr>
-            <th>품목</th>
-            <th>품종</th>
-            <th className="text-right">가격</th>
-            <th className="text-center">단위</th>
-            <th className="text-right">등락률</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(priceData?.grains || []).map((item, idx) => (
-            <tr key={'grain-' + idx}>
-              <td className="td-name">{item.name}</td>
-              <td className="td-kind">{item.kind}</td>
-              <td className="text-right">{item.price}원</td>
-              <td className="text-center">{item.unit}</td>
-              <td className={'text-right ' + getRateClass(item.direction)}>
-                {getArrow(item.direction)} {item.changeRate}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="price-grid">
+        {allItems.map((item, idx) => (
+          <PriceCard key={idx} item={item} />
+        ))}
+      </div>
 
-      <h3 className="category-title">🍎 과일</h3>
-      <table className="price-table">
-        <thead>
-          <tr>
-            <th>품목</th>
-            <th>품종</th>
-            <th className="text-right">가격</th>
-            <th className="text-center">단위</th>
-            <th className="text-right">등락률</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(priceData?.fruits || []).map((item, idx) => (
-            <tr key={'fruit-' + idx}>
-              <td className="td-name">{item.name}</td>
-              <td className="td-kind">{item.kind}</td>
-              <td className="text-right">{item.price}원</td>
-              <td className="text-center">{item.unit}</td>
-              <td className={'text-right ' + getRateClass(item.direction)}>
-                {getArrow(item.direction)} {item.changeRate}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <p className="price-source">출처: KAMIS 농산물유통정보 (소매가격 기준)</p>
+      <p className="price-source">
+        출처: KAMIS 농산물유통정보 (소매가격) |
+        {priceData?.updatedAt && (' ' + new Date(priceData.updatedAt).toLocaleString('ko-KR') + ' 기준')}
+        <button onClick={onRefresh} className="btn-refresh-inline">🔄</button>
+      </p>
     </section>
   );
 }
 
-// ===== 게시판 =====
+// ===== 시세 전체보기 페이지 =====
+function PriceFullPage({ priceData, loading, error, onRefresh }) {
+  if (loading) return <div className="page-wrapper"><p className="loading-text">⏳ 시세 정보를 불러오는 중...</p></div>;
+  if (error) return <div className="page-wrapper"><p className="error-text">⚠️ {error}</p><button onClick={onRefresh} className="btn-retry">다시 시도</button></div>;
+
+  return (
+    <div className="page-wrapper">
+      <section className="section-box">
+        <div className="section-header">
+          <h2 className="section-title">📊 원자재 시세 전체보기</h2>
+          <button onClick={onRefresh} className="btn-refresh-small">🔄 새로고침</button>
+        </div>
+
+        <h3 className="sub-title">🌾 곡물 (식량작물)</h3>
+        <div className="price-grid">
+          {(priceData?.grains || []).map((item, idx) => (
+            <PriceCard key={'g' + idx} item={item} />
+          ))}
+        </div>
+
+        <h3 className="sub-title">🍎 과일류</h3>
+        <div className="price-grid">
+          {(priceData?.fruits || []).map((item, idx) => (
+            <PriceCard key={'f' + idx} item={item} />
+          ))}
+        </div>
+
+        <p className="price-source">
+          출처: KAMIS 농산물유통정보 (소매가격) |
+          {priceData?.updatedAt && (' ' + new Date(priceData.updatedAt).toLocaleString('ko-KR') + ' 기준')}
+        </p>
+      </section>
+    </div>
+  );
+}
+
+// ===== 홈 - 게시판 미리보기 =====
+function BoardPreview({ title, icon, posts, basePath }) {
+  return (
+    <section className="section-box board-preview">
+      <div className="section-header">
+        <h2 className="section-title">{icon} {title}</h2>
+        <Link to={basePath} className="section-more">전체보기 →</Link>
+      </div>
+      <ul className="preview-list">
+        {posts.map(post => (
+          <li key={post.id}>
+            <Link to={basePath + '/' + post.id} className="preview-link">
+              <span className="preview-title">{post.title}</span>
+              <span className="preview-date">{post.date}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// ===== 게시판 목록 =====
 function Board({ type, title }) {
   const posts = type === 'news' ? DUMMY_NEWS : DUMMY_FREE;
   const navigate = useNavigate();
 
   return (
-    <section className="board-section">
-      <h2>{title}</h2>
-      <table className="board-table">
-        <thead>
-          <tr>
-            <th className="col-id">번호</th>
-            <th>제목</th>
-            <th className="col-author">작성자</th>
-            <th className="col-date">날짜</th>
-          </tr>
-        </thead>
-        <tbody>
-          {posts.map(post => (
-            <tr key={post.id}
-              onClick={() => navigate('/board/' + type + '/' + post.id)}
-              className="board-row">
-              <td className="text-center">{post.id}</td>
-              <td className="td-title">{post.title}</td>
-              <td className="text-center">{post.author}</td>
-              <td className="text-center">{post.date}</td>
+    <div className="page-wrapper">
+      <section className="section-box">
+        <h2 className="section-title">{title}</h2>
+        <table className="board-table">
+          <thead>
+            <tr>
+              <th className="col-id">번호</th>
+              <th>제목</th>
+              <th className="col-date">날짜</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+          </thead>
+          <tbody>
+            {posts.map(post => (
+              <tr key={post.id}
+                onClick={() => navigate('/board/' + type + '/' + post.id)}
+                className="board-row">
+                <td className="text-center">{post.id}</td>
+                <td className="td-title">{post.title}</td>
+                <td className="text-center">{post.date}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </div>
   );
 }
 
@@ -188,43 +226,44 @@ function PostDetail({ type }) {
   const comments = DUMMY_COMMENTS.filter(c => c.postId === parseInt(id));
   const [newComment, setNewComment] = useState('');
 
-  if (!post) return <div className="board-section">게시글을 찾을 수 없습니다.</div>;
+  if (!post) return <div className="page-wrapper"><p>게시글을 찾을 수 없습니다.</p></div>;
 
   return (
-    <article className="board-section">
-      <button onClick={() => navigate(-1)} className="btn-back">← 목록으로</button>
-      <div className="post-detail">
-        <h2>{post.title}</h2>
-        <div className="post-meta">
-          <span>✍️ {post.author}</span>
-          <span>📅 {post.date}</span>
-        </div>
-        <hr />
-        <p className="post-content">{post.content}</p>
-      </div>
-      <div className="comment-section">
-        <h3>💬 댓글 ({comments.length})</h3>
-        {comments.map(c => (
-          <div key={c.id} className="comment-item">
-            <div className="comment-header">
-              <strong>{c.author}</strong>
-              <span className="comment-date">{c.date}</span>
-            </div>
-            <p>{c.content}</p>
+    <div className="page-wrapper">
+      <article className="section-box">
+        <button onClick={() => navigate(-1)} className="btn-back">← 목록으로</button>
+        <div className="post-detail">
+          <h2>{post.title}</h2>
+          <div className="post-meta">
+            <span>📅 {post.date}</span>
           </div>
-        ))}
-        <div className="comment-input">
-          <input
-            type="text"
-            value={newComment}
-            onChange={e => setNewComment(e.target.value)}
-            placeholder="댓글을 입력하세요..."
-            className="input-comment"
-          />
-          <button className="btn-comment">등록</button>
+          <hr />
+          <p className="post-content">{post.content || '본문 내용이 없습니다.'}</p>
         </div>
-      </div>
-    </article>
+        <div className="comment-section">
+          <h3>💬 댓글 ({comments.length})</h3>
+          {comments.map(c => (
+            <div key={c.id} className="comment-item">
+              <div className="comment-header">
+                <strong>{c.author}</strong>
+                <span className="comment-date">{c.date}</span>
+              </div>
+              <p>{c.content}</p>
+            </div>
+          ))}
+          <div className="comment-input">
+            <input
+              type="text"
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              placeholder="댓글을 입력하세요..."
+              className="input-comment"
+            />
+            <button className="btn-comment">등록</button>
+          </div>
+        </div>
+      </article>
+    </div>
   );
 }
 
@@ -248,36 +287,26 @@ function LoginPage() {
 // ===== 홈페이지 =====
 function HomePage({ priceData, priceLoading, priceError, onPriceRefresh }) {
   return (
-    <div className="home-page">
-      <PriceBoard
+    <div className="page-wrapper">
+      <PriceSection
         priceData={priceData}
         loading={priceLoading}
         error={priceError}
         onRefresh={onPriceRefresh}
       />
-      <div className="home-boards">
-        <section className="home-board-card">
-          <h3>📰 최신 업계뉴스</h3>
-          {DUMMY_NEWS.slice(0, 3).map(post => (
-            <Link key={post.id} to={'/board/news/' + post.id} className="home-post-link">
-              <div className="home-post-item">
-                <p className="home-post-title">{post.title}</p>
-                <span className="home-post-date">{post.date}</span>
-              </div>
-            </Link>
-          ))}
-        </section>
-        <section className="home-board-card">
-          <h3>💬 최신 자유게시판</h3>
-          {DUMMY_FREE.slice(0, 3).map(post => (
-            <Link key={post.id} to={'/board/free/' + post.id} className="home-post-link">
-              <div className="home-post-item">
-                <p className="home-post-title">{post.title}</p>
-                <span className="home-post-date">{post.date} | {post.author}</span>
-              </div>
-            </Link>
-          ))}
-        </section>
+      <div className="board-grid">
+        <BoardPreview
+          title="업계 뉴스"
+          icon="📰"
+          posts={DUMMY_NEWS}
+          basePath="/board/news"
+        />
+        <BoardPreview
+          title="자유게시판"
+          icon="💬"
+          posts={DUMMY_FREE}
+          basePath="/board/free"
+        />
       </div>
     </div>
   );
@@ -310,21 +339,19 @@ function App() {
       setPriceData(data);
     } catch (err) {
       console.error('시세 조회 실패:', err);
-      setPriceError('시세 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      setPriceError('시세 정보를 불러오지 못했습니다.');
     } finally {
       setPriceLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchPrices();
-  }, []);
+  useEffect(() => { fetchPrices(); }, []);
 
   return (
     <Router>
-      <div className="app-container">
+      <div className="app">
         <Header />
-        <main className="main-content">
+        <main>
           <Routes>
             <Route path="/" element={
               <HomePage
@@ -334,7 +361,15 @@ function App() {
                 onPriceRefresh={fetchPrices}
               />
             } />
-            <Route path="/board/news/*" element={<BoardWrapper type="news" title="📰 업계뉴스" />} />
+            <Route path="/prices" element={
+              <PriceFullPage
+                priceData={priceData}
+                loading={priceLoading}
+                error={priceError}
+                onRefresh={fetchPrices}
+              />
+            } />
+            <Route path="/board/news/*" element={<BoardWrapper type="news" title="📰 업계 뉴스" />} />
             <Route path="/board/free/*" element={<BoardWrapper type="free" title="💬 자유게시판" />} />
             <Route path="/login" element={<LoginPage />} />
           </Routes>
