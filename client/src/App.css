@@ -1,254 +1,237 @@
-/* ===== 기본 리셋 ===== */
+/* ===== 전체 레이아웃 ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Pretendard', -apple-system, sans-serif; background: #f5f6f8; color: #333; }
-a { text-decoration: none; color: inherit; }
+
+.app-container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.main-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
 /* ===== 헤더 ===== */
 .header {
-  background: #1a1a2e; color: white;
-  padding: 0 24px; height: 60px;
-  position: sticky; top: 0; z-index: 100;
-}
-.header-inner {
-  max-width: 1200px; margin: 0 auto;
-  display: flex; align-items: center; height: 100%;
-}
-.logo { font-size: 20px; font-weight: 700; margin-right: 40px; }
-.nav { display: flex; gap: 24px; }
-.nav a { font-size: 14px; opacity: 0.8; transition: opacity 0.2s; }
-.nav a:hover { opacity: 1; }
-.auth-area { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-.user-name { font-size: 14px; }
-.btn-login, .btn-logout {
-  padding: 6px 16px; border-radius: 6px; font-size: 13px;
-  border: 1px solid rgba(255,255,255,0.3); background: transparent;
-  color: white; cursor: pointer;
-}
-.btn-logout:hover { background: rgba(255,255,255,0.1); }
-
-/* ===== 메인 컨텐츠 ===== */
-.main-content { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
-
-/* ===== 홈페이지 ===== */
-.section {
-  background: white; border-radius: 12px;
-  padding: 24px; margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.section-header h2 { font-size: 18px; }
-.section-header a { font-size: 13px; color: #4a90d9; }
-
-/* 시세 카드 */
-.price-preview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.price-card {
-  background: #f8f9fa; border-radius: 8px;
-  padding: 16px; text-align: center;
-}
-.price-item-name { font-size: 13px; color: #666; margin-bottom: 8px; }
-.price-value { font-size: 16px; font-weight: 700; }
-.change { font-size: 13px; margin-top: 4px; }
-.change.up { color: #e74c3c; }
-.change.down { color: #3498db; }
-
-/* 게시판 미리보기 */
-.board-previews { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.post-list { list-style: none; }
-.post-list li {
-  display: flex; justify-content: space-between;
-  padding: 10px 0; border-bottom: 1px solid #eee;
-  cursor: pointer; font-size: 14px;
-}
-.post-list li:hover .post-title { color: #4a90d9; }
-.post-date { color: #999; font-size: 12px; }
-
-/* ===== 시세 보드 ===== */
-.price-board { background: white; border-radius: 12px; padding: 24px; }
-.price-board h2 { margin-bottom: 8px; }
-.price-date { color: #888; font-size: 14px; margin-bottom: 20px; }
-.price-category { margin-bottom: 24px; }
-.price-category h3 {
-  font-size: 15px; color: #555; margin-bottom: 8px;
-  padding-bottom: 8px; border-bottom: 2px solid #eee;
-}
-.price-table { width: 100%; border-collapse: collapse; }
-.price-table th { text-align: left; padding: 10px; font-size: 13px; color: #888; }
-.price-table td { padding: 10px; font-size: 14px; border-top: 1px solid #f0f0f0; }
-
-/* ===== 게시판 ===== */
-.board { background: white; border-radius: 12px; padding: 24px; }
-.board-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.btn-write {
-  padding: 8px 20px; background: #4a90d9; color: white;
-  border: none; border-radius: 6px; cursor: pointer; font-size: 14px;
-}
-.btn-write:hover { background: #357abd; }
-.board-table { width: 100%; border-collapse: collapse; }
-.board-table th {
-  padding: 12px; text-align: left; font-size: 13px;
-  color: #888; border-bottom: 2px solid #eee;
-}
-.board-table td { padding: 12px; font-size: 14px; border-bottom: 1px solid #f0f0f0; }
-.col-no { width: 60px; }
-.col-author { width: 150px; }
-.col-date { width: 100px; }
-.col-views { width: 60px; }
-.post-row { cursor: pointer; }
-.post-row:hover { background: #f8f9fa; }
-.comment-count { color: #e74c3c; font-size: 12px; margin-left: 4px; }
-.company { font-size: 12px; color: #999; margin-left: 4px; }
-.empty { text-align: center; color: #999; padding: 40px !important; }
-.pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; }
-.pagination button { padding: 6px 16px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ===== 글 상세 ===== */
-.post-detail { background: white; border-radius: 12px; padding: 32px; }
-.post-detail h2 { font-size: 22px; margin-bottom: 12px; }
-.post-meta { font-size: 13px; color: #888; display: flex; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
-.post-content { padding: 24px 0; min-height: 200px; line-height: 1.8; font-size: 15px; }
-.comments-section { border-top: 2px solid #eee; padding-top: 20px; }
-.comments-section h3 { margin-bottom: 16px; }
-.comment {
-  padding: 12px; background: #f8f9fa;
-  border-radius: 8px; margin-bottom: 8px;
-}
-.comment-meta { font-size: 13px; color: #666; margin-bottom: 4px; display: flex; gap: 8px; }
-.comment p { font-size: 14px; }
-.comment-form { margin-top: 16px; }
-.comment-form textarea {
-  width: 100%; padding: 12px; border: 1px solid #ddd;
-  border-radius: 8px; resize: vertical; min-height: 80px;
-}
-.comment-form button {
-  margin-top: 8px; padding: 8px 20px;
-  background: #4a90d9; color: white;
-  border: none; border-radius: 6px; cursor: pointer;
+  background: linear-gradient(135deg, #1a5276, #2e86c1);
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-/* ===== 글쓰기 ===== */
-.write-form { background: white; border-radius: 12px; padding: 32px; }
-.write-form h2 { margin-bottom: 20px; }
-.write-form input {
-  width: 100%; padding: 12px; border: 1px solid #ddd;
-  border-radius: 8px; font-size: 15px; margin-bottom: 12px;
-}
-.write-form textarea {
-  width: 100%; padding: 12px; border: 1px solid #ddd;
-  border-radius: 8px; font-size: 14px; line-height: 1.6;
-}
-.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-.form-actions button { padding: 10px 24px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; }
-.btn-submit { background: #4a90d9 !important; color: white !important; border: none !important; }
-
-/* ===== 로그인 ===== */
-.login-page {
-  max-width: 400px; margin: 60px auto;
-  background: white; border-radius: 12px; padding: 32px;
-}
-.login-page h2 { text-align: center; margin-bottom: 24px; }
-.login-page input, .login-page select {
-  width: 100%; padding: 12px; border: 1px solid #ddd;
-  border-radius: 8px; margin-bottom: 12px; font-size: 14px;
-}
-.toggle-auth {
-  display: block; width: 100%; text-align: center;
-  margin-top: 12px; background: none; border: none;
-  color: #4a90d9; cursor: pointer; font-size: 13px;
+.header-logo { text-decoration: none; color: white; }
+.header-title { font-size: 1.4rem; margin: 0; color: white; }
+.header-nav { display: flex; gap: 20px; align-items: center; }
+.nav-link { color: white; text-decoration: none; font-weight: 500; }
+.nav-link:hover { text-decoration: underline; }
+.nav-login {
+  color: white;
+  text-decoration: none;
+  background: rgba(255,255,255,0.2);
+  padding: 6px 16px;
+  border-radius: 20px;
 }
 
-.loading { text-align: center; padding: 40px; color: #888; }
-
-/* 반응형 */
-@media (max-width: 768px) {
-  .price-preview { grid-template-columns: repeat(2, 1fr); }
-  .board-previews { grid-template-columns: 1fr; }
-  .nav { gap: 12px; font-size: 12px; }
-}
-
-/* 가격 테이블 스타일 */
-.price-container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
+/* ===== 시세 섹션 ===== */
+.price-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .price-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
+  gap: 10px;
 }
 
-.price-header h2 {
-  margin: 0;
-}
+.price-meta { display: flex; align-items: center; gap: 12px; }
+.update-time { font-size: 0.85rem; color: #888; }
 
-.updated-at {
-  color: #888;
-  font-size: 14px;
-}
-
-.refresh-btn {
-  padding: 6px 14px;
-  border: 1px solid #ddd;
+.btn-refresh-small {
+  background: #eaf2f8;
+  border: 1px solid #2e86c1;
+  color: #2e86c1;
+  padding: 4px 12px;
   border-radius: 6px;
-  background: #fff;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.85rem;
+}
+.btn-refresh-small:hover { background: #d4e6f1; }
+
+.btn-refresh {
+  background: #2e86c1;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
 }
 
-.refresh-btn:hover {
-  background: #f0f0f0;
-}
+.loading-text { text-align: center; padding: 40px 0; color: #888; font-size: 1.1rem; }
+.error-text { text-align: center; padding: 20px 0; color: #e74c3c; }
+.fallback-notice { background: #fef9e7; padding: 8px 12px; border-radius: 6px; color: #9a7d0a; font-size: 0.9rem; margin-bottom: 12px; }
+
+.category-title { margin: 20px 0 10px; font-size: 1.1rem; }
 
 .price-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 30px;
+  margin-bottom: 16px;
 }
-
-.price-table th,
-.price-table td {
-  padding: 10px 14px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
 .price-table th {
   background: #f8f9fa;
-  font-weight: 600;
-  font-size: 14px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.9rem;
+  border-bottom: 2px solid #dee2e6;
+}
+.price-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+.price-table tbody tr:hover { background: #f8f9fa; }
+
+.td-name { font-weight: 600; }
+.td-kind { color: #666; }
+
+.rate-up { color: #e74c3c; font-weight: 600; }
+.rate-down { color: #2e86c1; font-weight: 600; }
+.rate-same { color: #7f8c8d; }
+
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+.price-source { text-align: right; font-size: 0.8rem; color: #aaa; margin-top: 8px; }
+
+/* ===== 게시판 ===== */
+.board-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.board-table { width: 100%; border-collapse: collapse; }
+.board-table th {
+  background: #f8f9fa;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+}
+.board-table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+.board-row { cursor: pointer; }
+.board-row:hover { background: #f0f7ff; }
+
+.col-id { width: 60px; text-align: center; }
+.col-author { width: 100px; text-align: center; }
+.col-date { width: 120px; text-align: center; }
+
+.td-title { color: #1a5276; font-weight: 500; }
+
+/* ===== 게시글 상세 ===== */
+.btn-back {
+  background: none;
+  border: 1px solid #ccc;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 16px;
   color: #555;
 }
+.btn-back:hover { background: #f5f5f5; }
 
-.price-table td.price {
-  font-weight: 600;
-}
+.post-detail { margin-bottom: 24px; }
+.post-meta { display: flex; gap: 20px; color: #888; margin: 10px 0; font-size: 0.9rem; }
+.post-content { line-height: 1.8; color: #333; margin-top: 16px; }
 
-.rate-up {
-  color: #e74c3c;
-  font-weight: 600;
-}
+/* ===== 댓글 ===== */
+.comment-section { border-top: 1px solid #eee; padding-top: 20px; }
+.comment-item { background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 10px 0; }
+.comment-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.comment-date { color: #aaa; font-size: 0.85rem; }
+.comment-input { display: flex; gap: 8px; margin-top: 16px; }
+.input-comment { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+.btn-comment { background: #2e86c1; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
 
-.rate-down {
-  color: #2980b9;
-  font-weight: 600;
-}
-
-.rate-same {
-  color: #888;
-}
-
-.loading {
-  text-align: center;
+/* ===== 로그인 ===== */
+.login-wrapper { display: flex; justify-content: center; padding: 60px 20px; }
+.login-box {
+  background: white;
   padding: 40px;
-  font-size: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+.login-box h2 { margin-bottom: 24px; }
+.input-field {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  background: #2e86c1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn-login:hover { background: #1a5276; }
+.login-footer { margin-top: 16px; font-size: 0.9rem; color: #888; }
+.login-footer a { color: #2e86c1; }
+
+/* ===== 홈페이지 ===== */
+.home-page { }
+.home-boards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.home-board-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.home-post-link { text-decoration: none; color: inherit; }
+.home-post-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.home-post-item:hover { background: #f8f9fa; }
+.home-post-title { color: #333; margin-bottom: 4px; }
+.home-post-date { font-size: 0.8rem; color: #aaa; }
+
+/* ===== 푸터 ===== */
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  color: #aaa;
+  font-size: 0.85rem;
+  margin-top: 40px;
 }
 
-.error {
-  text-align: center;
-  padding: 40px;
-  color: #e74c3c;
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+  .header { flex-direction: column; gap: 10px; }
+  .home-boards { grid-template-columns: 1fr; }
+  .price-header { flex-direction: column; align-items: flex-start; }
 }
