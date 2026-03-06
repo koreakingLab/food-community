@@ -238,7 +238,7 @@ function LoginPage() {
         <input type="password" placeholder="비밀번호" className="input-field" />
         <button className="btn-login">로그인</button>
         <p className="login-footer">
-          아직 회원이 아니신가요? <a href="#">회원가입</a>
+          아직 회원이 아니신가요? <Link to="/signup">회원가입</Link>
         </p>
       </div>
     </div>
