@@ -1,0 +1,153 @@
+.haccp-list-page {
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 32px 0;
+}
+
+.haccp-list-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.haccp-list-header {
+  margin-bottom: 24px;
+}
+
+.haccp-list-header h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+}
+
+.haccp-list-count {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* 검색바 */
+.haccp-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.haccp-search input {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.haccp-search input:focus {
+  border-color: #4a6cf7;
+}
+
+.haccp-search button {
+  padding: 10px 24px;
+  background: #4a6cf7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.haccp-search button:hover {
+  background: #3b5de7;
+}
+
+/* 테이블 */
+.haccp-table {
+  width: 100%;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-collapse: collapse;
+}
+
+.haccp-table thead {
+  background: #f8f9fb;
+}
+
+.haccp-table th {
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  text-align: left;
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.haccp-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.haccp-table tbody tr:hover {
+  background: #f8f9fb;
+}
+
+.col-no { width: 60px; text-align: center; }
+.col-name { font-weight: 600; }
+.col-industry { width: 140px; }
+.col-date { width: 120px; }
+.col-addr { color: #9ca3af; font-size: 13px; }
+
+.no-data {
+  text-align: center;
+  color: #9ca3af;
+  padding: 40px 0 !important;
+}
+
+.haccp-loading {
+  text-align: center;
+  padding: 60px 0;
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+/* 페이지네이션 */
+.haccp-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 24px;
+}
+
+.haccp-pagination button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.haccp-pagination button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.haccp-pagination button.active {
+  background: #4a6cf7;
+  color: #fff;
+  border-color: #4a6cf7;
+}
+
+.haccp-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

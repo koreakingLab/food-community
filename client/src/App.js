@@ -2,6 +2,8 @@ import HaccpList from './pages/HaccpList';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import './App.css';
+import HaccpPreview from './components/HaccpPreview';
+
 
 const API_BASE = 'https://food-community-production.up.railway.app';
 
@@ -184,6 +186,46 @@ function BoardPreview({ title, icon, posts, basePath }) {
   );
 }
 
+// ===== 홈 - HACCP 미리보기 =====
+function HaccpPreview() {
+  const [items, setItems] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(API_BASE + '/api/haccp?pageNo=1&numOfRows=12');
+        const data = await res.json();
+        setItems(data.items || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <section className="section-box">
+      <div className="section-header">
+        <h2 className="section-title">🏭 HACCP 인증업체</h2>
+        <button className="section-more" onClick={() => navigate('/haccp')}>
+          전체보기 →
+        </button>
+      </div>
+      <div className="price-grid">
+        {items.map((item, idx) => (
+          <div className="price-card" key={idx}>
+            <span className="haccp-badge">HACCP</span>
+            <p className="card-name">{item.BSSH_NM}</p>
+            <p className="card-unit">{item.INDUTY_NM}</p>
+            <p className="card-rate rate-same">인증일 {item.HACCP_DESIG_DT}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ===== 게시판 목록 =====
 function Board({ type, title }) {
   const posts = type === 'news' ? DUMMY_NEWS : DUMMY_FREE;
@@ -295,6 +337,9 @@ function HomePage({ priceData, priceLoading, priceError, onPriceRefresh }) {
         error={priceError}
         onRefresh={onPriceRefresh}
       />
+
+      <HaccpPreview />
+
       <div className="board-grid">
         <BoardPreview
           title="업계 뉴스"
