@@ -8,8 +8,8 @@ router.get('/api/haccp', async (req, res) => {
   try {
     const { pageNo = 1, numOfRows = 20, search = '' } = req.query;
 
-    // ✅ 샘플코드와 동일한 방식으로 URL 생성
-    const url = 'http://apis.data.go.kr/1471000/HaccpAppnSttusService01/getHaccpAppnSttusList01';
+    // ✅ 새 API 엔드포인트
+    const url = 'https://apis.data.go.kr/B553748/CertCompanyListService2/getCertCompanyListService2';
     let queryParams = '?' + encodeURIComponent('serviceKey') + '=' + SERVICE_KEY;
     queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent(pageNo);
     queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent(numOfRows);
@@ -24,7 +24,7 @@ router.get('/api/haccp', async (req, res) => {
     const response = await axios.get(url + queryParams);
     const data = response.data;
 
-    console.log('HACCP API 응답:', JSON.stringify(data).substring(0, 500));
+    console.log('HACCP API 응답:', JSON.stringify(data).substring(0, 1000));
 
     const header = data?.header || {};
     const body = data?.body || {};
@@ -38,7 +38,7 @@ router.get('/api/haccp', async (req, res) => {
       });
     }
 
-    // items 파싱 (배열 또는 객체)
+    // items 파싱
     let items = body.items || [];
     if (!Array.isArray(items)) {
       items = items.item ? (Array.isArray(items.item) ? items.item : [items.item]) : [];
