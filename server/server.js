@@ -9,8 +9,6 @@ app.use(haccpRoutes);
 // ===== 미들웨어 =====
 app.use(cors({
   origin: [
-    'https://www.paxc.co.kr',
-    'https://paxc.co.kr',
     'https://food-community-ebon.vercel.app',
     'http://localhost:3000'  // 로컬 개발용
   ]

@@ -1,4 +1,3 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HaccpList from './pages/HaccpList';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
