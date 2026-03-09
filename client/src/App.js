@@ -190,7 +190,6 @@ function HaccpPreview() {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [companyItems, setCompanyItems] = useState([]);
   const [detailLoading, setDetailLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
