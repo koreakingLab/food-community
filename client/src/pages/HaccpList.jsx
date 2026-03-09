@@ -36,7 +36,7 @@ export default function HaccpList() {
           <thead>
             <tr>
               <th>No</th>
-              <th>업체명</th>
+              <th>업체명</th>cd 
               <th>업종</th>
               <th>HACCP 지정일</th>
               <th>소재지</th>

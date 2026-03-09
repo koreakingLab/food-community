@@ -1,5 +1,8 @@
 // client/src/hooks/useHaccp.js
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 export function useHaccp() {
   const [items, setItems] = useState([]);
@@ -12,12 +15,11 @@ export function useHaccp() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/haccp?pageNo=${page}&numOfRows=${pageSize}&search=${encodeURIComponent(search)}`
-      );
-      const data = await res.json();
-      setItems(data.items);
-      setTotalCount(data.totalCount);
+      const res = await axios.get(`${API_URL}/api/haccp`, {
+        params: { pageNo: page, numOfRows: pageSize, search }
+      });
+      setItems(res.data.items);
+      setTotalCount(res.data.totalCount);
     } catch (err) {
       console.error(err);
     } finally {
