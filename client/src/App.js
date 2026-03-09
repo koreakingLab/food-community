@@ -214,9 +214,9 @@ function HaccpPreview() {
         {items.map((item, idx) => (
           <div className="price-card" key={idx}>
             <span className="haccp-badge">HACCP</span>
-            <p className="card-name">{item.BSSH_NM}</p>
-            <p className="card-unit">{item.INDUTY_NM}</p>
-            <p className="card-rate rate-same">인증일 {item.HACCP_DESIG_DT}</p>
+            <p className="card-name">{item.company}</p>
+            <p className="card-unit">{item.businesstypeNm}</p>
+            <p className="card-rate rate-same">인증일 {item.issuedate}</p>
           </div>
         ))}
       </div>

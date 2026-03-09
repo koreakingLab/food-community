@@ -87,10 +87,10 @@ export default function HaccpList() {
               {items.length > 0 ? items.map((item, idx) => (
                 <tr key={idx}>
                   <td className="col-no">{(page - 1) * pageSize + idx + 1}</td>
-                  <td className="col-name">{item.BSSH_NM}</td>
-                  <td className="col-industry">{item.INDUTY_NM}</td>
-                  <td className="col-date">{item.HACCP_DESIG_DT}</td>
-                  <td className="col-addr">{item.SITE_ADDR}</td>
+                  <td>{item.company}</td>
+                  <td>{item.businesstypeNm}</td>
+                  <td>{item.issuedate}</td>
+                  <td>{item.worksaddr}</td>
                 </tr>
               )) : (
                 <tr>
