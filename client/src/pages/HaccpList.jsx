@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useHaccp } from '../hooks/useHaccp';
 
 export default function HaccpList() {
-  const { items, totalCount, page, setPage, search, setSearch, loading, pageSize } = useHaccp();
+  const { items, totalCount, page, setPage, setSearch, loading, pageSize } = useHaccp();
   const [input, setInput] = useState('');
   const totalPages = Math.ceil(totalCount / pageSize);
 
