@@ -55,9 +55,44 @@ async function syncHaccpData() {
         const parsed = await parseStringPromise(res.data, { explicitArray: false });
         const body = parsed?.response?.body || {};
 
+        // ✅ 디버깅 (첫 페이지만)
+        if (page === 1) {
+          console.log('[HACCP] parsed 키:', JSON.stringify(Object.keys(parsed || {})));
+          console.log('[HACCP] response 키:', JSON.stringify(Object.keys(parsed?.response || {})));
+          console.log('[HACCP] body 키:', JSON.stringify(Object.keys(body)));
+          const rawItems = body.items;
+          console.log('[HACCP] items 타입:', typeof rawItems);
+          if (rawItems) {
+            console.log('[HACCP] items 키:', JSON.stringify(Object.keys(rawItems)));
+            console.log('[HACCP] items 샘플:', JSON.stringify(rawItems).substring(0, 500));
+          } else {
+            console.log('[HACCP] items가 없음! body 전체:', JSON.stringify(body).substring(0, 500));
+          }
+        }
+
+        // ✅ 개선된 items 추출 로직
         let items = [];
-        if (body.items && body.items.item) {
-          items = Array.isArray(body.items.item) ? body.items.item : [body.items.item];
+        const rawItems = body.items;
+
+        if (rawItems) {
+          if (Array.isArray(rawItems)) {
+            // items 자체가 배열인 경우
+            items = rawItems;
+          } else if (rawItems.item) {
+            // items.item이 있는 경우
+            items = Array.isArray(rawItems.item) ? rawItems.item : [rawItems.item];
+          } else if (typeof rawItems === 'object') {
+            // items가 객체인데 item 키가 없는 경우 (다른 구조)
+            const vals = Object.values(rawItems).filter(v => typeof v === 'object' && v !== null);
+            if (vals.length > 0) {
+              items = vals;
+            }
+          }
+        } else {
+          // body에 items가 없는 경우 - body 직접 확인
+          if (body.item) {
+            items = Array.isArray(body.item) ? body.item : [body.item];
+          }
         }
 
         // Supabase 형식으로 변환
@@ -68,18 +103,18 @@ async function syncHaccpData() {
           area1: item.area1 || null,
           area2: item.area2 || null,
           businesstype: item.businesstype || null,
-          businesstype_nm: item.businesstypeNm || null,
+          businesstype_nm: item.businesstypeNm || item.businessstypeNm || null,
           businessitem_nm: item.businessitemNm || null,
           product_gb: item.productGb || null,
           appointno: item.appointno || null,
           issuedate: item.issuedate || null,
           issueenddate: item.issueenddate || null,
-          lcns_no: item.LCNS_NO || null,
+          lcns_no: item.LCNS_NO || item.lcns_no || null,
           synced_at: new Date().toISOString(),
         }));
 
         allItems = allItems.concat(rows);
-        console.log(`[HACCP] 페이지 ${page}/${totalPages} 수집 완료 (${items.length}건)`);
+        console.log(`[HACCP] 페이지 ${page}/${totalPages} 수집 완료 (${rows.length}건)`);
 
         // API 부하 방지 딜레이
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -92,10 +127,15 @@ async function syncHaccpData() {
     // 3. 기존 데이터 삭제 후 새 데이터 삽입
     console.log(`[HACCP] Supabase에 ${allItems.length}건 저장 시작...`);
 
+    if (allItems.length === 0) {
+      console.log('[HACCP] 수집된 데이터가 0건이므로 저장 건너뜀');
+      return;
+    }
+
     const { error: deleteError } = await supabase
       .from('haccp_companies')
       .delete()
-      .neq('id', 0); // 전체 삭제
+      .neq('id', 0);
 
     if (deleteError) {
       console.error('[HACCP] 기존 데이터 삭제 실패:', deleteError.message);
@@ -126,7 +166,7 @@ async function syncHaccpData() {
 }
 
 // ===== 하루 1회 자동 동기화 (24시간마다) =====
-syncHaccpData(); // 서버 시작 시 1회 실행
+syncHaccpData();
 setInterval(syncHaccpData, 24 * 60 * 60 * 1000);
 
 // ===== API 엔드포인트 (Supabase에서 조회) =====
@@ -157,7 +197,6 @@ router.get('/api/haccp', async (req, res) => {
       return res.status(500).json({ error: error.message, items: [], totalCount: 0 });
     }
 
-    // 프론트엔드 호환을 위해 필드명 변환
     const items = (data || []).map(row => ({
       company: row.company,
       ceoname: row.ceoname,
@@ -223,7 +262,7 @@ router.get('/api/haccp/company', async (req, res) => {
   }
 });
 
-// 동기화 상태 확인 & 수동 동기화
+// 동기화 상태 확인
 router.get('/api/haccp/status', async (req, res) => {
   const { count } = await supabase
     .from('haccp_companies')
@@ -235,7 +274,7 @@ router.get('/api/haccp/status', async (req, res) => {
   });
 });
 
-// 수동 동기화 트리거 (필요 시)
+// 수동 동기화 트리거
 router.post('/api/haccp/sync', (req, res) => {
   syncHaccpData();
   res.json({ message: '동기화가 시작되었습니다.' });
