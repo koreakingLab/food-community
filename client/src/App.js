@@ -1,3 +1,5 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HaccpList from './pages/HaccpList';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import './App.css';
@@ -372,6 +374,7 @@ function App() {
             <Route path="/board/news/*" element={<BoardWrapper type="news" title="📰 업계 뉴스" />} />
             <Route path="/board/free/*" element={<BoardWrapper type="free" title="💬 자유게시판" />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/haccp" element={<HaccpList />} />
           </Routes>
         </main>
         <footer className="app-footer">
