@@ -31,8 +31,20 @@ async function syncHaccpData() {
       + '&' + encodeURIComponent('numOfRows') + '=1';
 
     const firstRes = await axios.get(firstUrl, { responseType: 'text', timeout: 30000 });
-    const firstParsed = await parseStringPromise(firstRes.data, { explicitArray: false });
-    const totalCount = Number(firstParsed?.response?.body?.totalCount) || 0;
+    let firstBody = {};
+    try {
+      const firstParsed = await parseStringPromise(firstRes.data, { explicitArray: false });
+      firstBody = firstParsed?.response?.body || {};
+    } catch (e) {
+      try {
+        const jsonData = JSON.parse(firstRes.data);
+        firstBody = jsonData?.body || {};
+      } catch (e2) {
+        console.error('[HACCP] 첫 요청 파싱 실패');
+      }
+    }
+
+    const totalCount = Number(firstBody?.totalCount) || 0;
     console.log('[HACCP] 총 건수:', totalCount);
 
     if (totalCount === 0) {
@@ -52,21 +64,19 @@ async function syncHaccpData() {
           + '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent(pageSize);
 
         const res = await axios.get(url, { responseType: 'text', timeout: 30000 });
-        const parsed = await parseStringPromise(res.data, { explicitArray: false });
-        const body = parsed?.response?.body || {};
+        let body = {};
 
-        // ✅ 디버깅 (첫 페이지만)
-        if (page === 1) {
-          console.log('[HACCP] parsed 키:', JSON.stringify(Object.keys(parsed || {})));
-          console.log('[HACCP] response 키:', JSON.stringify(Object.keys(parsed?.response || {})));
-          console.log('[HACCP] body 키:', JSON.stringify(Object.keys(body)));
-          const rawItems = body.items;
-          console.log('[HACCP] items 타입:', typeof rawItems);
-          if (rawItems) {
-            console.log('[HACCP] items 키:', JSON.stringify(Object.keys(rawItems)));
-            console.log('[HACCP] items 샘플:', JSON.stringify(rawItems).substring(0, 500));
-          } else {
-            console.log('[HACCP] items가 없음! body 전체:', JSON.stringify(body).substring(0, 500));
+        // ✅ XML 파싱 시도, 실패하면 JSON으로 시도
+        try {
+          const parsed = await parseStringPromise(res.data, { explicitArray: false });
+          body = parsed?.response?.body || {};
+        } catch (parseErr) {
+          try {
+            const jsonData = JSON.parse(res.data);
+            body = jsonData?.body || {};
+          } catch (jsonErr) {
+            console.error(`[HACCP] 페이지 ${page} 파싱 실패 (XML/JSON 모두)`);
+            continue;
           }
         }
 
@@ -76,23 +86,17 @@ async function syncHaccpData() {
 
         if (rawItems) {
           if (Array.isArray(rawItems)) {
-            // items 자체가 배열인 경우
             items = rawItems;
           } else if (rawItems.item) {
-            // items.item이 있는 경우
             items = Array.isArray(rawItems.item) ? rawItems.item : [rawItems.item];
           } else if (typeof rawItems === 'object') {
-            // items가 객체인데 item 키가 없는 경우 (다른 구조)
             const vals = Object.values(rawItems).filter(v => typeof v === 'object' && v !== null);
             if (vals.length > 0) {
               items = vals;
             }
           }
-        } else {
-          // body에 items가 없는 경우 - body 직접 확인
-          if (body.item) {
-            items = Array.isArray(body.item) ? body.item : [body.item];
-          }
+        } else if (body.item) {
+          items = Array.isArray(body.item) ? body.item : [body.item];
         }
 
         // Supabase 형식으로 변환
@@ -165,8 +169,7 @@ async function syncHaccpData() {
   }
 }
 
-// ===== 하루 1회 자동 동기화 (24시간마다) =====
-// ✅ 변경: Supabase에 데이터 있으면 건너뛰기
+// ===== 서버 시작 시 Supabase 확인 후 동기화 =====
 async function initSync() {
   const { count } = await supabase
     .from('haccp_companies')
