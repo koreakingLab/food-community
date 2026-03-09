@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const app = express();
+const haccpRoutes = require('./routes/haccp');
+app.use(haccpRoutes);   
 
 // ===== 미들웨어 =====
 app.use(cors());
