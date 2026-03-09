@@ -7,7 +7,13 @@ const haccpRoutes = require('./routes/haccp');
 app.use(haccpRoutes);   
 
 // ===== 미들웨어 =====
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://www.paxc.co.kr',
+    'https://food-community-ebon.vercel.app',
+    'http://localhost:3000'  // 로컬 개발용
+  ]
+}));
 app.use(express.json());
 
 // ===== 기존 라우트 =====
