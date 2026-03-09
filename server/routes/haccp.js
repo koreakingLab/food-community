@@ -41,7 +41,7 @@ async function syncHaccpData() {
     }
 
     // 2. 페이지별로 데이터 수집
-    const pageSize = 1000;
+    const pageSize = 100;
     const totalPages = Math.ceil(totalCount / pageSize);
     let allItems = [];
 
@@ -166,7 +166,20 @@ async function syncHaccpData() {
 }
 
 // ===== 하루 1회 자동 동기화 (24시간마다) =====
-syncHaccpData();
+// ✅ 변경: Supabase에 데이터 있으면 건너뛰기
+async function initSync() {
+  const { count } = await supabase
+    .from('haccp_companies')
+    .select('*', { count: 'exact', head: true });
+
+  if (count && count > 0) {
+    console.log(`[HACCP] Supabase에 이미 ${count}건 존재, 초기 동기화 건너뜀`);
+  } else {
+    console.log('[HACCP] Supabase 비어있음, 초기 동기화 시작');
+    syncHaccpData();
+  }
+}
+initSync();
 setInterval(syncHaccpData, 24 * 60 * 60 * 1000);
 
 // ===== API 엔드포인트 (Supabase에서 조회) =====
