@@ -187,14 +187,30 @@ function BoardPreview({ title, icon, posts, basePath }) {
 // ===== 홈 - HACCP 미리보기 =====
 function HaccpPreview() {
   const [items, setItems] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [companyItems, setCompanyItems] = useState([]);
+  const [detailLoading, setDetailLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(API_BASE + '/api/haccp?pageNo=1&numOfRows=12');
+        // 중복 제거를 위해 넉넉히 가져옴
+        const res = await fetch(API_BASE + '/api/haccp?pageNo=1&numOfRows=100');
         const data = await res.json();
-        setItems(data.items || []);
+        const allItems = data.items || [];
+
+        // ✅ 업체명 기준 중복 제거 (첫 번째 항목만 유지)
+        const seen = new Set();
+        const unique = [];
+        for (const item of allItems) {
+          if (!seen.has(item.company)) {
+            seen.add(item.company);
+            unique.push(item);
+          }
+          if (unique.length >= 12) break;
+        }
+        setItems(unique);
       } catch (err) {
         console.error(err);
       }
@@ -202,24 +218,79 @@ function HaccpPreview() {
     fetchData();
   }, []);
 
+  const handleCardClick = async (companyName) => {
+    setDetailLoading(true);
+    setSelectedCompany(companyName);
+    try {
+      const res = await fetch(API_BASE + '/api/haccp/company?name=' + encodeURIComponent(companyName));
+      const data = await res.json();
+      setCompanyItems(data.items || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedCompany(null);
+    setCompanyItems([]);
+  };
+
   return (
     <section className="section-box">
       <div className="section-header">
         <h2 className="section-title">🏭 HACCP 인증업체</h2>
-        <button className="section-more" onClick={() => navigate('/haccp')}>
-          전체보기 →
-        </button>
+        <Link to="/haccp" className="section-more">전체보기 →</Link>
       </div>
       <div className="price-grid">
         {items.map((item, idx) => (
-          <div className="price-card" key={idx}>
+          <div className="price-card haccp-card-click" key={idx} onClick={() => handleCardClick(item.company)}>
             <span className="haccp-badge">HACCP</span>
             <p className="card-name">{item.company}</p>
             <p className="card-unit">{item.businesstypeNm}</p>
-            <p className="card-rate rate-same">인증일 {item.issuedate}</p>
+            <p className="card-rate rate-same">{item.area1} {item.area2}</p>
           </div>
         ))}
       </div>
+
+      {/* 상세정보 모달 */}
+      {selectedCompany && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeModal}>✕</button>
+            <h3 className="modal-title">{selectedCompany}</h3>
+
+            {detailLoading ? (
+              <p className="modal-loading">불러오는 중...</p>
+            ) : (
+              <>
+                {companyItems.length > 0 && (
+                  <div className="modal-company-info">
+                    <p><span className="modal-label-inline">대표자</span> {companyItems[0].ceoname || '-'}</p>
+                    <p><span className="modal-label-inline">주소</span> {companyItems[0].worksaddr || '-'}</p>
+                    <p><span className="modal-label-inline">지역</span> {(companyItems[0].area1 || '') + ' ' + (companyItems[0].area2 || '')}</p>
+                  </div>
+                )}
+                <h4 className="modal-subtitle">📋 품목별 인증 현황 ({companyItems.length}건)</h4>
+                <div className="modal-items-list">
+                  {companyItems.map((item, idx) => (
+                    <div className="modal-item-row" key={idx}>
+                      <div className="modal-item-left">
+                        <span className="modal-item-name">{item.businessitemNm || item.businesstypeNm || '-'}</span>
+                        <span className="modal-item-type">{item.productGb || ''}</span>
+                      </div>
+                      <div className="modal-item-right">
+                        <span className="modal-item-date">{item.issuedate} ~ {item.issueenddate || '진행중'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
