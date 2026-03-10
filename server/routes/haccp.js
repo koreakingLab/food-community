@@ -2,16 +2,10 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { parseStringPromise } = require('xml2js');
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('../lib/supabase');
 
 const SERVICE_KEY = process.env.HACCP_API_KEY;
 const API_URL = 'https://apis.data.go.kr/B553748/CertCompanyListService2/getCertCompanyListService2';
-
-// Supabase 클라이언트
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
 
 let isSyncing = false;
 
