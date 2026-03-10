@@ -6,6 +6,7 @@ const app = express();
 const haccpRoutes = require('./routes/haccp');
 const cron = require('node-cron');
 const fetch = require('node-fetch');
+const smartNoticesRouter = require('./routes/smartNotices');
 
 // ===== 미들웨어 =====
 app.use(cors({
@@ -165,3 +166,5 @@ cron.schedule('0 7,13 * * *', async () => {
     console.error('❌ 동기화 실패:', err);
   }
 });
+
+app.use('/api/smart-notices', smartNoticesRouter);
