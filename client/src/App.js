@@ -2,6 +2,7 @@ import HaccpList from './pages/HaccpList';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import './App.css';
+import SmartNotices from './SmartNotices';
 
 const API_BASE = 'https://food-community-production.up.railway.app';
 
@@ -407,6 +408,7 @@ function HomePage({ priceData, priceLoading, priceError, onPriceRefresh }) {
       />
 
       <HaccpPreview />
+      <SmartNotices />
 
       <div className="board-grid">
         <BoardPreview
