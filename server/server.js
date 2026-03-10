@@ -4,6 +4,8 @@ const cors = require('cors');
 const axios = require('axios');
 const app = express();
 const haccpRoutes = require('./routes/haccp');
+const cron = require('node-cron');
+const fetch = require('node-fetch');
 
 // ===== 미들웨어 =====
 app.use(cors({
@@ -149,4 +151,17 @@ app.get('/api/kamis/clear-cache', (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// 매일 오전 7시, 오후 1시에 동기화
+cron.schedule('0 7,13 * * *', async () => {
+  console.log('📡 스마트제조 공고 동기화 시작...');
+  try {
+    await fetch(`${process.env.SERVER_URL}/api/smart-notices/sync`, {
+      method: 'POST'
+    });
+    console.log('✅ 동기화 완료');
+  } catch (err) {
+    console.error('❌ 동기화 실패:', err);
+  }
 });
