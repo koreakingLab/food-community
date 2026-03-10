@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import './App.css';
 import SmartNotices from './SmartNotices';
+import SmartNoticeDetail from './SmartNoticeDetail';
 
 const API_BASE = 'https://food-community-production.up.railway.app';
 
@@ -489,6 +490,7 @@ function App() {
             <Route path="/board/free/*" element={<BoardWrapper type="free" title="💬 자유게시판" />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/haccp" element={<HaccpList />} />
+            <Route path="/notices/:id" element={<SmartNoticeDetail />} />  {/* ← 추가 */}
           </Routes>
         </main>
         <footer className="app-footer">

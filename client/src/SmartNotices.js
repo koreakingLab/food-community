@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://food-community-production.up.railway.app';
 
@@ -97,13 +98,9 @@ export default function SmartNotices() {
                   <tr key={notice.pblanc_id}>
                     <td>{(page - 1) * 15 + idx + 1}</td>
                     <td className="notice-title">
-                      <a
-                        href={notice.pblanc_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <Link to={`/notices/${notice.id}`}>
                         {notice.pblanc_nm}
-                      </a>
+                      </Link>
                     </td>
                     <td>{notice.jrsd_instt_nm}</td>
                     <td>{formatDate(notice)}</td>

@@ -170,4 +170,23 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ✅ 상세 조회 API (단건)
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase
+      .from('smart_notices')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('[SmartNotices] 상세 조회 오류:', err.message);
+    res.status(404).json({ success: false, error: '공고를 찾을 수 없습니다.' });
+  }
+});
+
 module.exports = router;

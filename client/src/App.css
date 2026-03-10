@@ -535,3 +535,166 @@ main { flex: 1; }
   color: #999;
   padding: 40px 0;
 }
+
+/* ===== 게시판 테이블 열 간격 수정 ===== */
+.notice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  table-layout: fixed;       /* 고정 레이아웃 */
+}
+
+.notice-table th:nth-child(1),
+.notice-table td:nth-child(1) {
+  width: 50px;                /* 번호 */
+  text-align: center;
+}
+
+.notice-table th:nth-child(2),
+.notice-table td:nth-child(2) {
+  width: auto;                /* 공고명 - 나머지 공간 */
+}
+
+.notice-table th:nth-child(3),
+.notice-table td:nth-child(3) {
+  width: 140px;               /* 소관기관 */
+  white-space: nowrap;
+}
+
+.notice-table th:nth-child(4),
+.notice-table td:nth-child(4) {
+  width: 200px;               /* 신청기간 */
+  white-space: nowrap;
+}
+
+.notice-table th:nth-child(5),
+.notice-table td:nth-child(5) {
+  width: 70px;                /* 상태 */
+  text-align: center;
+}
+
+.notice-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-title a {
+  color: #333;
+  text-decoration: none;
+}
+
+.notice-title a:hover {
+  color: #2d6cdf;
+  text-decoration: underline;
+}
+
+/* ===== 상세 페이지 스타일 ===== */
+.detail-page {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.detail-header {
+  margin-bottom: 20px;
+}
+
+.back-link {
+  color: #2d6cdf;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.detail-category {
+  display: inline-block;
+  background: #2d6cdf;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.detail-title {
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.detail-date {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.detail-divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 20px 0;
+}
+
+.detail-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.detail-info-table th {
+  text-align: left;
+  padding: 10px 16px;
+  background: #f8f9fa;
+  font-size: 14px;
+  font-weight: bold;
+  color: #555;
+  width: 150px;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+}
+
+.detail-info-table td {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-section h3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.detail-summary {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #444;
+  white-space: pre-line;
+}
+
+.detail-link-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.detail-original-link {
+  display: inline-block;
+  padding: 12px 30px;
+  background: #2d6cdf;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.detail-original-link:hover {
+  background: #1a53b5;
+}
