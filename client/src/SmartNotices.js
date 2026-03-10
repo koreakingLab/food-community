@@ -10,27 +10,27 @@ export default function SmartNotices() {
   const [filter, setFilter] = useState('all'); // all, active, expired
 
   useEffect(() => {
+    const fetchNotices = async () => {
+      setLoading(true);
+      try {
+        let url = `${API_BASE}/api/smart-notices?page=${page}&limit=15`;
+        if (filter !== 'all') url += `&status=${filter}`;
+  
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json.success) {
+          setNotices(json.data);
+          setTotalPages(json.pagination.totalPages);
+        }
+      } catch (err) {
+        console.error('공고 로딩 실패:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
     fetchNotices();
   }, [page, filter]);
-
-  const fetchNotices = async () => {
-    setLoading(true);
-    try {
-      let url = `${API_BASE}/api/smart-notices?page=${page}&limit=15`;
-      if (filter !== 'all') url += `&status=${filter}`;
-
-      const res = await fetch(url);
-      const json = await res.json();
-      if (json.success) {
-        setNotices(json.data);
-        setTotalPages(json.pagination.totalPages);
-      }
-    } catch (err) {
-      console.error('공고 로딩 실패:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (notice) => {
     // 원문 텍스트가 있고, 날짜가 아닌 경우 원문 표시
