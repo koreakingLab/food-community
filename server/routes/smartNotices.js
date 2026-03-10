@@ -61,7 +61,7 @@ router.post('/sync', async (req, res) => {
 
     console.log('[SmartNotices] 기업마당 API 호출 시작...');
     const response = await axios(apiUrl, { timeout: 30000 });
-    const data = response.data();
+    const data = response.data;
 
     const allNotices = data?.jsonArray || [];
     console.log(`[SmartNotices] 전체 공고 수: ${allNotices.length}`);
