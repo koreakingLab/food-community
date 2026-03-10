@@ -204,7 +204,7 @@ function SlideBanner() {
       setCurrent(prev => (prev + 1) % slides.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   return (
     <section className="slide-banner">
