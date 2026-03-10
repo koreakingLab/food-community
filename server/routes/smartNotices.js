@@ -100,6 +100,10 @@ router.post('/sync', async (req, res) => {
           reqst_date_raw: rawDate,
           hash_tags: notice.hashTags,
           creat_pnttm: notice.creatPnttm,
+          reqst_mth_papers_cn: notice.reqstMthPapersCn || null,
+          refrnc_nm: notice.refrncNm || null,
+          rcept_engn_hmpg_url: notice.rceptEngnHmpgUrl || null,
+          pldir_sport_realm: notice.pldirSportRealmLclasCodeNm || null,
           updated_at: new Date().toISOString()
         }, { onConflict: 'pblanc_id' });
 

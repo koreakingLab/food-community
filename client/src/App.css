@@ -698,3 +698,29 @@ main { flex: 1; }
 .detail-original-link:hover {
   background: #1a53b5;
 }
+
+/* 접수 사이트 버튼 */
+.detail-link-section {
+  margin-top: 30px;
+  text-align: center;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.detail-apply-link {
+  display: inline-block;
+  padding: 12px 30px;
+  background: #fff;
+  color: #2d6cdf;
+  border: 2px solid #2d6cdf;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.detail-apply-link:hover {
+  background: #f0f4ff;
+}

@@ -3,6 +3,22 @@ import { useParams, Link } from 'react-router-dom';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://food-community-production.up.railway.app';
 
+// HTML 태그 제거 + 깔끔한 텍스트로 변환
+function stripHtml(html) {
+  if (!html) return '';
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export default function SmartNoticeDetail() {
   const { id } = useParams();
   const [notice, setNotice] = useState(null);
@@ -47,10 +63,23 @@ export default function SmartNoticeDetail() {
     return { text: '마감', className: 'badge expired' };
   };
 
+  // 기업마당 원문 URL 생성
+  const getOriginalUrl = (notice) => {
+    if (notice.pblanc_url && notice.pblanc_url.startsWith('http')) {
+      return notice.pblanc_url;
+    }
+    // pblancId로 직접 URL 생성
+    if (notice.pblanc_id) {
+      return `https://www.bizinfo.go.kr/web/lay1/bbs/S1T122C128/AS/74/view.do?pblancId=${notice.pblanc_id}`;
+    }
+    return null;
+  };
+
   if (loading) return <div className="detail-page"><p>⏳ 로딩 중...</p></div>;
   if (!notice) return <div className="detail-page"><p>공고를 찾을 수 없습니다.</p></div>;
 
   const status = getStatus(notice);
+  const originalUrl = getOriginalUrl(notice);
 
   return (
     <div className="detail-page">
@@ -58,9 +87,9 @@ export default function SmartNoticeDetail() {
         <Link to="/" className="back-link">← 목록으로</Link>
       </div>
 
-      <div className="detail-category">
-        {notice.hash_tags && notice.hash_tags.split(',')[0]}
-      </div>
+      {notice.pldir_sport_realm && (
+        <div className="detail-category">{notice.pldir_sport_realm}</div>
+      )}
 
       <h1 className="detail-title">{notice.pblanc_nm}</h1>
 
@@ -83,28 +112,59 @@ export default function SmartNoticeDetail() {
             <td>{formatDate(notice)}</td>
           </tr>
           <tr>
+            <th>지원분야</th>
+            <td>{notice.pldir_sport_realm || '-'}</td>
+          </tr>
+          <tr>
             <th>해시태그</th>
             <td>{notice.hash_tags || '-'}</td>
           </tr>
+          {notice.refrnc_nm && (
+            <tr>
+              <th>참고자료</th>
+              <td>{notice.refrnc_nm}</td>
+            </tr>
+          )}
         </tbody>
       </table>
 
       <hr className="detail-divider" />
 
-      <div className="detail-section">
-        <h3>사업개요</h3>
-        <p className="detail-summary">{notice.bsns_sumry_cn || '상세 내용은 원문을 확인해주세요.'}</p>
-      </div>
+      {notice.bsns_sumry_cn && (
+        <div className="detail-section">
+          <h3>사업개요</h3>
+          <p className="detail-summary">{stripHtml(notice.bsns_sumry_cn)}</p>
+        </div>
+      )}
+
+      {notice.reqst_mth_papers_cn && (
+        <div className="detail-section">
+          <h3>신청방법 및 제출서류</h3>
+          <p className="detail-summary">{stripHtml(notice.reqst_mth_papers_cn)}</p>
+        </div>
+      )}
 
       <div className="detail-link-section">
-        <a
-          href={notice.pblanc_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="detail-original-link"
-        >
-          📄 원문 공고 보기 (기업마당)
-        </a>
+        {notice.rcept_engn_hmpg_url && (
+          <a
+            href={notice.rcept_engn_hmpg_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="detail-apply-link"
+          >
+            📝 접수 사이트 바로가기
+          </a>
+        )}
+        {originalUrl && (
+          <a
+            href={originalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="detail-original-link"
+          >
+            📄 원문 공고 보기 (기업마당)
+          </a>
+        )}
       </div>
     </div>
   );
