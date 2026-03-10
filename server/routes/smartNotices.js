@@ -78,12 +78,12 @@ router.post('/sync', async (req, res) => {
     let errorCount = 0;
 
     for (const notice of smartNotices) {
-      const [beginDe, endDe] = (notice.reqstBeginEndDe || '')
+      const rawDate = notice.reqstBeginEndDe || '';
+      const [beginDe, endDe] = rawDate
         .split('~')
         .map(d => {
           const trimmed = d?.trim();
-          if (!trimmed || trimmed.length !== 8) return null;
-          // '20260101' → '2026-01-01'
+          if (!trimmed || trimmed.length !== 8 || !/^\d{8}$/.test(trimmed)) return null;
           return `${trimmed.slice(0, 4)}-${trimmed.slice(4, 6)}-${trimmed.slice(6, 8)}`;
         });
 
@@ -97,6 +97,7 @@ router.post('/sync', async (req, res) => {
           pblanc_url: notice.pblancUrl,
           reqst_begin_de: beginDe || null,
           reqst_end_de: endDe || null,
+          reqst_date_raw: rawDate,
           hash_tags: notice.hashTags,
           creat_pnttm: notice.creatPnttm,
           updated_at: new Date().toISOString()
