@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const fetch = require('node-fetch');
+const axios = require('axios');
 const { supabase } = require('../lib/supabase');
 
 // 스마트제조 관련 키워드 목록
@@ -60,8 +60,8 @@ router.post('/sync', async (req, res) => {
     const apiUrl = `https://www.bizinfo.go.kr/uss/rss/bizinfoApi.do?dataType=json&searchCnt=0&crtfcKey=${API_KEY}`;
 
     console.log('[SmartNotices] 기업마당 API 호출 시작...');
-    const response = await fetch(apiUrl, { timeout: 30000 });
-    const data = await response.json();
+    const response = await axios(apiUrl, { timeout: 30000 });
+    const data = response.json();
 
     const allNotices = data?.jsonArray || [];
     console.log(`[SmartNotices] 전체 공고 수: ${allNotices.length}`);

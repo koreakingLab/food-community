@@ -5,7 +5,6 @@ const axios = require('axios');
 const app = express();
 const haccpRoutes = require('./routes/haccp');
 const cron = require('node-cron');
-const fetch = require('node-fetch');
 const smartNoticesRouter = require('./routes/smartNotices');
 
 // ===== 미들웨어 =====
@@ -159,7 +158,7 @@ app.listen(PORT, () => {
 cron.schedule('0 7,13 * * *', async () => {
   console.log('📡 스마트제조 공고 동기화 시작...');
   try {
-    await fetch(`${process.env.SERVER_URL}/api/smart-notices/sync`, {
+    await axios(`${process.env.SERVER_URL}/api/smart-notices/sync`, {
       method: 'POST'
     });
     console.log('✅ 동기화 완료');
