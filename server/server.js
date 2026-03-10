@@ -22,6 +22,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/prices', require('./routes/prices'));
 app.use('/api/news', require('./routes/news'));
+app.use('/api/smart-notices', smartNoticesRouter);
 
 // ============================================
 // ===== KAMIS API (농산물유통정보) 연동 =====
@@ -166,5 +167,3 @@ cron.schedule('0 7,13 * * *', async () => {
     console.error('❌ 동기화 실패:', err);
   }
 });
-
-app.use('/api/smart-notices', smartNoticesRouter);
