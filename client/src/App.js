@@ -1,6 +1,6 @@
 import HaccpList from './pages/HaccpList';
-import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import './App.css';
 import SmartNotices from './SmartNotices';
 import SmartNoticeDetail from './SmartNoticeDetail';
