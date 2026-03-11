@@ -873,10 +873,11 @@ function PostDetail({ type }) {
 }
 
 function WritePost() {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
-  // 로그인 안 되어 있으면 로그인 페이지로 이동
   useEffect(() => {
     if (!user) {
       alert('로그인이 필요합니다.');
@@ -884,23 +885,26 @@ function WritePost() {
     }
   }, [user, navigate]);
 
-  // 글 등록 시 토큰을 헤더에 포함
-  const handleSubmit = async () => {
-    // ... 기존 코드에서 fetch 부분만 수정 ...
-    const res = await fetch(`${API_BASE}/api/posts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`   // ← 토큰 추가
-      },
-      body: JSON.stringify({
-        title,
-        content,
-        board_type: 'free',
-        author_id: user.id   // ← 로그인한 사용자 ID 사용
-      })
-    });
-    // ...
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(API_BASE + '/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ title, content, board_type: 'free' }),
+      });
+      if (res.ok) {
+        navigate('/board/free');
+      } else {
+        const err = await res.json();
+        alert(err.message || '글 작성 실패');
+      }
+    } catch (e) {
+      alert('오류가 발생했습니다.');
+    }
   };
 
   if (!user) return null;
@@ -908,7 +912,7 @@ function WritePost() {
   return (
     <div className="main">
       <div className="card">
-        <h2 className="write-heading"><IconPen /> 글쓰기</h2>
+        <h2 className="write-heading">✏️ 글쓰기</h2>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
