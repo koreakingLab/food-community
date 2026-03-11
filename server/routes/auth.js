@@ -161,10 +161,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: '아이디 또는 비밀번호가 올바르지 않습니다.' });
     }
 
+    // 세션 만료시간 1시간으로 설정 (1h, 24h, 7d, 30d 등 가능)
     const token = jwt.sign(
       { id: user.id, username: user.username, name: user.name },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1h' }
     );
 
     res.json({

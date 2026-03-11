@@ -133,6 +133,20 @@ function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  // 401 응답 시 자동 로그아웃
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const res = await originalFetch(...args);
+      if (res.status === 401 && token) {
+        logout();
+        window.location.href = '/login';
+      }
+      return res;
+    };
+    return () => { window.fetch = originalFetch; };
+  }, [token]);
+
   // 로그인
   const login = async (username, password) => {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
