@@ -70,6 +70,7 @@ const IconPen = () => (
     <path d="m15 5 4 4"/>
   </svg>
 );
+
 const IconUser = () => (
   <svg className="icon-svg" viewBox="0 0 24 24">
     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
@@ -808,9 +809,9 @@ function PostDetail({ type }) {
             <>
               <h2>{post.title}</h2>
               <div className="post-meta">
-                <span>✍️ {post.nickname || '익명'}</span>
-                <span>📅 {new Date(post.created_at).toLocaleString('ko-KR')}</span>
-                <span>👁️ {post.views}</span>
+                <span><IconUser /> {post.nickname || '익명'}</span>
+                <span><IconCalendar /> {new Date(post.created_at).toLocaleString('ko-KR')}</span>
+                <span><IconEye /> {post.views}</span>
               </div>
               {isAuthor && (
                 <div className="post-actions">
@@ -837,7 +838,7 @@ function PostDetail({ type }) {
 
         {/* 댓글 섹션 */}
         <div className="comment-section">
-          <h3>💬 댓글 ({comments.length})</h3>
+          <h3><IconMessage /> 댓글 ({comments.length})</h3>
           {comments.map(c => (
             <div key={c.id} className="comment-item">
               <div className="comment-header">
@@ -912,7 +913,7 @@ function WritePost() {
   return (
     <div className="main">
       <div className="card">
-        <h2 className="write-heading">✏️ 글쓰기</h2>
+        <h2 className="write-heading"><IconPen /> 글쓰기</h2>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
