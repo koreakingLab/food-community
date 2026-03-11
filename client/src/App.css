@@ -853,3 +853,61 @@ main { flex: 1; }
   .price-card { padding: 12px; }
   .price-card .item-price { font-size: 18px; }
 }
+
+/* 글쓰기 버튼 */
+.btn-write-small {
+  padding: 8px 18px; background: #4A90D9; color: #fff;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-write-small:hover { background: #357ABD; }
+
+/* 수정/삭제 버튼 */
+.post-actions { display: flex; gap: 8px; margin: 12px 0; }
+.btn-edit {
+  padding: 6px 14px; border: 1px solid #4A90D9; color: #4A90D9;
+  background: #fff; border-radius: 6px; font-size: 13px; cursor: pointer;
+}
+.btn-delete {
+  padding: 6px 14px; border: 1px solid #E74C3C; color: #E74C3C;
+  background: #fff; border-radius: 6px; font-size: 13px; cursor: pointer;
+}
+.btn-save {
+  padding: 8px 18px; background: #4A90D9; color: #fff;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-cancel {
+  padding: 8px 18px; background: #F0F2F5; color: #8395A7;
+  border: none; border-radius: 8px; font-size: 13px; cursor: pointer;
+}
+
+/* 수정 폼 */
+.edit-title-input {
+  width: 100%; padding: 12px; border: 1px solid #E8ECF0;
+  border-radius: 8px; font-size: 16px; font-weight: 600; margin-bottom: 12px;
+}
+.edit-content-input {
+  width: 100%; padding: 12px; border: 1px solid #E8ECF0;
+  border-radius: 8px; font-size: 14px; line-height: 1.6; font-family: inherit;
+}
+.edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
+/* 글쓰기 폼 */
+.write-input {
+  width: 100%; padding: 12px; border: 1px solid #E8ECF0;
+  border-radius: 8px; font-size: 15px; margin-bottom: 12px;
+}
+.write-textarea {
+  width: 100%; padding: 12px; border: 1px solid #E8ECF0;
+  border-radius: 8px; font-size: 14px; line-height: 1.6; font-family: inherit;
+}
+
+/* 페이지네이션 */
+.pagination-simple {
+  display: flex; justify-content: center; align-items: center;
+  gap: 16px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #F0F2F5;
+}
+.pagination-simple button {
+  padding: 6px 16px; border: 1px solid #E8ECF0; border-radius: 8px;
+  cursor: pointer; background: #fff; font-weight: 600; font-size: 13px;
+}
+.pagination-simple button:disabled { opacity: 0.4; cursor: not-allowed; }

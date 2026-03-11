@@ -426,6 +426,21 @@ function HaccpPreview() {
 
 /* ===== 홈 - 자유게시판 ===== */
 function FreePreview() {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(API_BASE + '/api/posts?board_type=free&limit=5');
+        const json = await res.json();
+        if (json.success) setPosts(json.posts);
+      } catch (err) {
+        console.error('자유게시판 로딩 실패:', err);
+      }
+    };
+    fetchPosts();
+  }, []);
+
   return (
     <div className="card">
       <div className="card-header">
@@ -433,24 +448,45 @@ function FreePreview() {
         <Link to="/board/free" className="card-more">전체보기 →</Link>
       </div>
       <ul className="board-list">
-        {DUMMY_FREE.map(post => (
+        {posts.map(post => (
           <li key={post.id} className="board-item">
             <div className="board-title-wrap">
               <Link to={'/board/free/' + post.id} className="board-title-text">{post.title}</Link>
-              {post.comments != null && <span className="board-comment">[{post.comments}]</span>}
+              {post.comment_count > 0 && <span className="board-comment">[{post.comment_count}]</span>}
             </div>
-            <span className="board-date">{post.date}</span>
+            <span className="board-date">
+              {new Date(post.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
+            </span>
           </li>
         ))}
-      </ul>
+        {posts.length === 0 && <li className="board-item"><span className="board-title-text" style= color: '#8395A7' >게시글이 없습니다.</span></li>}      
+        </ul>
     </div>
   );
 }
 
 /* ===== 게시판 목록 (전체 페이지) ===== */
 function Board({ type, title }) {
-  const posts = type === 'news' ? DUMMY_NEWS : DUMMY_FREE;
+  const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(API_BASE + '/api/posts?board_type=' + type + '&page=' + page + '&limit=20')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) {
+          setPosts(json.posts);
+          setTotalPages(json.totalPages);
+        }
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, [type, page]);
+
   return (
     <div className="main">
       <div className="card">
@@ -458,25 +494,50 @@ function Board({ type, title }) {
           <div className="card-title">
             {type === 'news' ? <IconNewspaper /> : <IconMessage />} {title}
           </div>
+          {type === 'free' && (
+            <button onClick={() => navigate('/write/free')} className="btn-write-small">✏️ 글쓰기</button>
+          )}
         </div>
-        <table className="board-table">
-          <thead>
-            <tr>
-              <th className="col-id">번호</th>
-              <th>제목</th>
-              <th className="col-date">날짜</th>
-            </tr>
-          </thead>
-          <tbody>
-            {posts.map(post => (
-              <tr key={post.id} onClick={() => navigate('/board/' + type + '/' + post.id)} className="board-row">
-                <td className="text-center">{post.id}</td>
-                <td className="td-title">{post.title}</td>
-                <td className="text-center">{post.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {loading ? (
+          <p style= textAlign: 'center', padding:'40px', color:'#8395A7'>불러오는 중...</p>
+        ) : (
+          <>
+            <table className="board-table">
+              <thead>
+                <tr>
+                  <th className="col-id">번호</th>
+                  <th>제목</th>
+                  <th className="col-date">작성자</th>
+                  <th className="col-date">날짜</th>
+                  <th className="col-id">조회</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.length === 0 ? (
+                  <tr><td colSpan="5" className="text-center" style=padding:'40px', color:'#8395A7'>게시글이 없습니다.</td></tr>
+                ) : (
+                  posts.map(post => (
+                    <tr key={post.id} onClick={() => navigate('/board/' + type + '/' + post.id)} className="board-row">
+                      <td className="text-center">{post.id}</td>
+                      <td className="td-title">
+                        {post.title}
+                        {post.comment_count > 0 && <span className="board-comment"> [{post.comment_count}]</span>}
+                      </td>
+                      <td className="text-center">{post.nickname}</td>
+                      <td className="text-center">{new Date(post.created_at).toLocaleDateString('ko-KR')}</td>
+                      <td className="text-center">{post.views || 0}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+            <div className="pagination-simple">
+              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>이전</button>
+              <span>{page} / {totalPages || 1}</span>
+              <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>다음</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -486,45 +547,198 @@ function Board({ type, title }) {
 function PostDetail({ type }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const posts = type === 'news' ? DUMMY_NEWS : DUMMY_FREE;
-  const post = posts.find(p => p.id === parseInt(id));
-  const comments = DUMMY_COMMENTS.filter(c => c.postId === parseInt(id));
+  const [post, setPost] = useState(null);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
+  const token = localStorage.getItem('token');
+  let currentUserId = null;
+  if (token) {
+    try { currentUserId = JSON.parse(atob(token.split('.')[1])).id; } catch {}
+  }
+
+  useEffect(() => {
+    fetch(API_BASE + '/api/posts/' + id)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) {
+          setPost(json.post);
+          setComments(json.comments || []);
+        }
+      })
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      const res = await fetch(API_BASE + '/api/posts/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      if (res.ok) {
+        alert('삭제되었습니다.');
+        navigate('/board/' + type);
+      } else {
+        const err = await res.json();
+        alert(err.message || '삭제 실패');
+      }
+    } catch { alert('삭제 중 오류가 발생했습니다.'); }
+  };
+
+  const handleEdit = async () => {
+    try {
+      const res = await fetch(API_BASE + '/api/posts/' + id, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ title: editTitle, content: editContent }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setPost({ ...post, title: editTitle, content: editContent });
+        setIsEditing(false);
+      } else {
+        alert(json.message || '수정 실패');
+      }
+    } catch { alert('수정 중 오류가 발생했습니다.'); }
+  };
+
+  const handleComment = async () => {
+    if (!newComment.trim()) return;
+    if (!token) { alert('로그인이 필요합니다.'); return; }
+    try {
+      const res = await fetch(API_BASE + '/api/posts/' + id + '/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ content: newComment }),
+      });
+      if (res.ok) {
+        const comment = await res.json();
+        setComments([...comments, comment]);
+        setNewComment('');
+      }
+    } catch { alert('댓글 작성 실패'); }
+  };
+
+  if (loading) return <div className="main"><p>로딩 중...</p></div>;
   if (!post) return <div className="main"><p>게시글을 찾을 수 없습니다.</p></div>;
+
+  const isAuthor = currentUserId && post.user_id === currentUserId;
 
   return (
     <div className="main">
       <div className="card">
-        <button onClick={() => navigate(-1)} className="btn-back">← 목록으로</button>
+        <button onClick={() => navigate('/board/' + type)} className="btn-back">← 목록으로</button>
         <div className="post-detail">
-          <h2>{post.title}</h2>
-          <div className="post-meta"><span>📅 {post.date}</span></div>
-          <hr />
-          <p className="post-content">{post.content || '본문 내용이 없습니다.'}</p>
+          {isEditing ? (
+            <div className="edit-form">
+              <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
+                className="edit-title-input" placeholder="제목" />
+              <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
+                className="edit-content-input" rows={12} placeholder="내용" />
+              <div className="edit-actions">
+                <button onClick={() => setIsEditing(false)} className="btn-cancel">취소</button>
+                <button onClick={handleEdit} className="btn-save">저장</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h2>{post.title}</h2>
+              <div className="post-meta">
+                <span>✍️ {post.nickname || '익명'}</span>
+                <span>📅 {new Date(post.created_at).toLocaleString('ko-KR')}</span>
+                <span>👁️ {post.views}</span>
+              </div>
+              {isAuthor && (
+                <div className="post-actions">
+                  <button onClick={() => { setEditTitle(post.title); setEditContent(post.content); setIsEditing(true); }}
+                    className="btn-edit">수정</button>
+                  <button onClick={handleDelete} className="btn-delete">삭제</button>
+                </div>
+              )}
+              <hr />
+              <div className="post-content">
+                {post.content.split('\n').map((line, i) => <p key={i}>{line || <br />}</p>)}
+              </div>
+            </>
+          )}
         </div>
+
         <div className="comment-section">
           <h3>💬 댓글 ({comments.length})</h3>
           {comments.map(c => (
             <div key={c.id} className="comment-item">
               <div className="comment-header">
-                <strong>{c.author}</strong>
-                <span className="comment-date">{c.date}</span>
+                <strong>{c.nickname || '익명'}</strong>
+                <span className="comment-date">{new Date(c.created_at).toLocaleString('ko-KR')}</span>
               </div>
               <p>{c.content}</p>
             </div>
           ))}
           <div className="comment-input">
-            <input
-              type="text"
-              value={newComment}
-              onChange={e => setNewComment(e.target.value)}
-              placeholder="댓글을 입력하세요..."
-              className="input-comment"
-            />
-            <button className="btn-comment">등록</button>
+            <input type="text" value={newComment} onChange={e => setNewComment(e.target.value)}
+              placeholder={token ? "댓글을 입력하세요..." : "로그인 후 댓글을 작성할 수 있습니다."}
+              className="input-comment" disabled={!token} />
+            <button onClick={handleComment} className="btn-comment" disabled={!token}>등록</button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function WritePost() {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (!token) { alert('로그인이 필요합니다.'); navigate('/login'); return; }
+    try {
+      const res = await fetch(API_BASE + '/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ title, content, board_type: 'free' }),
+      });
+      if (res.ok) {
+        navigate('/board/free');
+      } else {
+        const err = await res.json();
+        alert(err.message || '글 작성 실패');
+      }
+    } catch { alert('오류가 발생했습니다.'); }
+  };
+
+  return (
+    <div className="main">
+      <div className="card">
+        <h2 style=marginBottom: '20px'>✏️ 글쓰기</h2>
+        <form onSubmit={handleSubmit}>
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)}
+            placeholder="제목을 입력하세요" required className="write-input" />
+          <textarea value={content} onChange={e => setContent(e.target.value)}
+            placeholder="내용을 입력하세요" required rows={15} className="write-textarea" />
+          <div style=display:'flex', gap:'8px', justifyContent:'flex-end', marginTop:'16px'>
+            <button type="button" onClick={() => navigate(-1)} className="btn-back">취소</button>
+            <button type="submit" className="btn-write-small">등록</button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -628,6 +842,7 @@ function App() {
             <Route path="/haccp" element={<HaccpList />} />
             <Route path="/smart-notices" element={<SmartNotices />} />
             <Route path="/notices/:id" element={<SmartNoticeDetail />} />
+            <Route path="/write/free" element={<WritePost />} />
           </Routes>
         </main>
         <Footer />

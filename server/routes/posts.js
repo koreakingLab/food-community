@@ -1,37 +1,61 @@
 const router = require('express').Router();
-const pool = require('../config/db');
+const { supabase } = require('../lib/supabase');
 const auth = require('../middleware/auth');
 
-// 게시글 목록 조회
+// 게시글 목록 조회 (댓글 수 포함)
 router.get('/', async (req, res) => {
   try {
     const { board_type = 'free', page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-    const posts = await pool.query(
-      `SELECT p.*, u.nickname, u.company_name,
-        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count
-       FROM posts p
-       JOIN users u ON p.user_id = u.id
-       WHERE p.board_type = $1
-       ORDER BY p.created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [board_type, limit, offset]
-    );
+    // 게시글 조회
+    const { data: posts, count, error } = await supabase
+      .from('posts')
+      .select('*, users(nickname, company_name)', { count: 'exact' })
+      .eq('board_type', board_type)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + parseInt(limit) - 1);
 
-    const total = await pool.query(
-      'SELECT COUNT(*) FROM posts WHERE board_type = $1',
-      [board_type]
-    );
+    if (error) throw error;
+
+    // 각 게시글의 댓글 수 조회
+    const postIds = posts.map(p => p.id);
+    let commentCounts = {};
+
+    if (postIds.length > 0) {
+      const { data: counts, error: countErr } = await supabase
+        .rpc('get_comment_counts', { post_ids: postIds });
+
+      // RPC가 없으면 개별 조회 폴백
+      if (countErr) {
+        for (const pid of postIds) {
+          const { count: c } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', pid);
+          commentCounts[pid] = c || 0;
+        }
+      } else {
+        counts.forEach(c => { commentCounts[c.post_id] = c.count; });
+      }
+    }
+
+    const result = posts.map(p => ({
+      ...p,
+      nickname: p.users?.nickname || '익명',
+      company_name: p.users?.company_name || null,
+      comment_count: commentCounts[p.id] || 0,
+    }));
 
     res.json({
-      posts: posts.rows,
-      totalPages: Math.ceil(total.rows[0].count / limit),
+      success: true,
+      posts: result,
+      totalPages: Math.ceil((count || 0) / limit),
       currentPage: parseInt(page),
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: '서버 오류' });
+    res.status(500).json({ success: false, message: '서버 오류' });
   }
 });
 
@@ -39,29 +63,32 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     // 조회수 증가
-    await pool.query('UPDATE posts SET views = views + 1 WHERE id = $1', [req.params.id]);
+    await supabase.rpc('increment_views', { row_id: parseInt(req.params.id) });
 
-    const post = await pool.query(
-      `SELECT p.*, u.nickname, u.company_name, u.company_type
-       FROM posts p JOIN users u ON p.user_id = u.id
-       WHERE p.id = $1`,
-      [req.params.id]
-    );
+    const { data: post, error } = await supabase
+      .from('posts')
+      .select('*, users(nickname, company_name, company_type)')
+      .eq('id', req.params.id)
+      .single();
 
-    if (post.rows.length === 0) {
-      return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
-    }
+    if (error || !post) return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
 
     // 댓글 조회
-    const comments = await pool.query(
-      `SELECT c.*, u.nickname, u.company_name
-       FROM comments c JOIN users u ON c.user_id = u.id
-       WHERE c.post_id = $1
-       ORDER BY c.created_at ASC`,
-      [req.params.id]
-    );
+    const { data: comments } = await supabase
+      .from('comments')
+      .select('*, users(nickname, company_name)')
+      .eq('post_id', req.params.id)
+      .order('created_at', { ascending: true });
 
-    res.json({ post: post.rows[0], comments: comments.rows });
+    res.json({
+      success: true,
+      post: { ...post, nickname: post.users?.nickname, company_name: post.users?.company_name },
+      comments: (comments || []).map(c => ({
+        ...c,
+        nickname: c.users?.nickname || '익명',
+        company_name: c.users?.company_name || null,
+      })),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: '서버 오류' });
@@ -72,14 +99,14 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     const { title, content, board_type } = req.body;
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({ user_id: req.user.id, board_type, title, content })
+      .select()
+      .single();
 
-    const result = await pool.query(
-      `INSERT INTO posts (user_id, board_type, title, content)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [req.user.id, board_type, title, content]
-    );
-
-    res.status(201).json(result.rows[0]);
+    if (error) throw error;
+    res.status(201).json({ success: true, post: data });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: '서버 오류' });
@@ -91,17 +118,21 @@ router.put('/:id', auth, async (req, res) => {
   try {
     const { title, content } = req.body;
 
-    const post = await pool.query('SELECT user_id FROM posts WHERE id = $1', [req.params.id]);
-    if (post.rows.length === 0) return res.status(404).json({ message: '게시글 없음' });
-    if (post.rows[0].user_id !== req.user.id) return res.status(403).json({ message: '권한 없음' });
+    // 작성자 확인
+    const { data: post } = await supabase
+      .from('posts').select('user_id').eq('id', req.params.id).single();
+    if (!post) return res.status(404).json({ message: '게시글 없음' });
+    if (post.user_id !== req.user.id) return res.status(403).json({ message: '권한 없음' });
 
-    const result = await pool.query(
-      `UPDATE posts SET title = $1, content = $2, updated_at = NOW()
-       WHERE id = $3 RETURNING *`,
-      [title, content, req.params.id]
-    );
+    const { data, error } = await supabase
+      .from('posts')
+      .update({ title, content, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .select()
+      .single();
 
-    res.json(result.rows[0]);
+    if (error) throw error;
+    res.json({ success: true, post: data });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: '서버 오류' });
@@ -111,12 +142,13 @@ router.put('/:id', auth, async (req, res) => {
 // 게시글 삭제
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const post = await pool.query('SELECT user_id FROM posts WHERE id = $1', [req.params.id]);
-    if (post.rows.length === 0) return res.status(404).json({ message: '게시글 없음' });
-    if (post.rows[0].user_id !== req.user.id) return res.status(403).json({ message: '권한 없음' });
+    const { data: post } = await supabase
+      .from('posts').select('user_id').eq('id', req.params.id).single();
+    if (!post) return res.status(404).json({ message: '게시글 없음' });
+    if (post.user_id !== req.user.id) return res.status(403).json({ message: '권한 없음' });
 
-    await pool.query('DELETE FROM posts WHERE id = $1', [req.params.id]);
-    res.json({ message: '삭제 완료' });
+    await supabase.from('posts').delete().eq('id', req.params.id);
+    res.json({ success: true, message: '삭제 완료' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: '서버 오류' });
@@ -127,12 +159,18 @@ router.delete('/:id', auth, async (req, res) => {
 router.post('/:id/comments', auth, async (req, res) => {
   try {
     const { content } = req.body;
-    const result = await pool.query(
-      `INSERT INTO comments (post_id, user_id, content)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [req.params.id, req.user.id, content]
-    );
-    res.status(201).json(result.rows[0]);
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({ post_id: parseInt(req.params.id), user_id: req.user.id, content })
+      .select('*, users(nickname, company_name)')
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({
+      ...data,
+      nickname: data.users?.nickname || '익명',
+      company_name: data.users?.company_name || null,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: '서버 오류' });
