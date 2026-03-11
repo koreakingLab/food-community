@@ -64,13 +64,13 @@ router.post('/verify-password', async (req, res) => {
 
     const { data: user, error } = await supabase
       .from('users')
-      .select('password_hash')
+      .select('password')
       .eq('id', req.user.id)
       .single();
 
     if (error) throw error;
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: '비밀번호가 일치하지 않습니다.' });
     }
@@ -97,13 +97,13 @@ router.put('/password', async (req, res) => {
     // 현재 비밀번호 확인
     const { data: user, error: fetchErr } = await supabase
       .from('users')
-      .select('password_hash')
+      .select('password')
       .eq('id', req.user.id)
       .single();
 
     if (fetchErr) throw fetchErr;
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: '현재 비밀번호가 일치하지 않습니다.' });
     }
@@ -114,7 +114,7 @@ router.put('/password', async (req, res) => {
 
     const { error: updateErr } = await supabase
       .from('users')
-      .update({ password_hash })
+      .update({ password: password_hash })
       .eq('id', req.user.id);
 
     if (updateErr) throw updateErr;
