@@ -21,11 +21,6 @@ function getNoticeStatus(notice) {
   return { text: '마감', cls: 'badge-expired' };
 }
 
-const DUMMY_COMMENTS = [
-  { id: 1, postId: 1, author: '이대리', content: '좋은 정보 감사합니다!', date: '2026-03-02' },
-  { id: 2, postId: 1, author: '박과장', content: '저도 관심 있어요', date: '2026-03-03' },
-];
-
 /* ===== SVG 아이콘 컴포넌트 ===== */
 const IconFactory = () => (
   <svg className="icon-svg" viewBox="0 0 24 24">
