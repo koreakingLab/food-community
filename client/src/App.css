@@ -641,10 +641,20 @@ main { flex: 1; }
   background: #F7F8FA; border-radius: 10px;
   padding: 16px; margin-bottom: 20px;
 }
-.modal-company-info p { margin: 6px 0; font-size: 14px; color: #2D3436; }
+.modal-company-info p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #2D3436;
+  display: flex;
+  gap: 12px;
+  line-height: 1.5;
+}
 .modal-label-inline {
-  color: #8395A7; font-weight: 600;
-  display: inline-block; width: 60px;
+  color: #8395A7;
+  font-weight: 600;
+  min-width: 60px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .modal-subtitle {
   font-size: 15px; font-weight: 700;
@@ -680,10 +690,11 @@ main { flex: 1; }
 /* ===== 스마트제조 공고 전체 페이지 ===== */
 .smart-notices-section {
   max-width: 1200px;
-  margin: 30px auto;
+  margin: 24px auto;
   padding: 0 40px;
 }
 .smart-notices-section h2 { margin-bottom: 15px; color: #2D3436; }
+.smart-notices-section .card { padding: 28px 32px; }
 .notice-filters {
   margin-bottom: 15px;
   display: flex;
@@ -744,7 +755,8 @@ main { flex: 1; }
 .no-data { text-align: center; color: #8395A7; padding: 40px 0; }
 
 /* ===== 상세 페이지 ===== */
-.detail-page { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+.detail-page { max-width: 800px; margin: 24px auto; padding: 0 20px; }
+.detail-page .card { padding: 32px; }
 .detail-header { margin-bottom: 20px; }
 .back-link { color: #4A90D9; text-decoration: none; font-size: 14px; }
 .back-link:hover { text-decoration: underline; }

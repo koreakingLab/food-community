@@ -24,13 +24,19 @@ const DUMMY_FREE = [
   { id: 5, title: '소규모 소스 제조 시작하려는데 조언 부탁드립니다', comments: 31, date: '03.06.' },
 ];
 
-const DUMMY_NOTICES_HOME = [
-  { id: 1, title: '2026년 스마트공장 보급·확산사업 참여기업 모집', org: '중소벤처기업부', period: '2026.03.01 ~ 2026.03.31', status: '접수중' },
-  { id: 2, title: '식품제조 HACCP 컨설팅 지원사업 공고', org: '식품의약품안전처', period: '2026.02.15 ~ 2026.03.15', status: '접수중' },
-  { id: 3, title: '[경북] AI 동반성장 주력산업 육성 지원사업 모집 공고', org: '경상북도', period: '2026.03.06 ~ 2026.03.16', status: '접수중' },
-  { id: 4, title: '중소기업 제조혁신 바우처 지원사업', org: '중소벤처기업부', period: '예산 소진시까지', status: '상시' },
-  { id: 5, title: '2026년 1차 스마트제조혁신 R&D 지원사업', org: '산업통상자원부', period: '2026.01.10 ~ 2026.02.10', status: '마감' },
-];
+/* ===== 공고 날짜/상태 헬퍼 (SlideBanner, NoticePreview 공용) ===== */
+function formatNoticeDate(notice) {
+  if (notice.reqst_date_raw && !notice.reqst_begin_de) return notice.reqst_date_raw;
+  const begin = notice.reqst_begin_de ? new Date(notice.reqst_begin_de).toLocaleDateString('ko-KR') : '-';
+  const end = notice.reqst_end_de ? new Date(notice.reqst_end_de).toLocaleDateString('ko-KR') : '-';
+  return begin + ' ~ ' + end;
+}
+function getNoticeStatus(notice) {
+  if (!notice.reqst_end_de) return { text: '상시', cls: 'badge-ongoing' };
+  const today = new Date().toISOString().split('T')[0];
+  if (notice.reqst_end_de >= today) return { text: '접수중', cls: 'badge-active' };
+  return { text: '마감', cls: 'badge-expired' };
+}
 
 const DUMMY_COMMENTS = [
   { id: 1, postId: 1, author: '이대리', content: '좋은 정보 감사합니다!', date: '2026-03-02' },
@@ -117,7 +123,7 @@ function PriceCard({ item }) {
   );
 }
 
-/* ===== 홈 - 시세 섹션 ===== */
+/* ===== 홈 - 시세 섹션 (⑥ 5개만 한줄) ===== */
 function PriceSection({ priceData, loading, error, onRefresh }) {
   if (loading) {
     return (
@@ -140,7 +146,7 @@ function PriceSection({ priceData, loading, error, onRefresh }) {
       </section>
     );
   }
-  const allItems = [...(priceData?.grains || []), ...(priceData?.fruits || [])];
+  const allItems = [...(priceData?.grains || []), ...(priceData?.fruits || [])].slice(0, 5);
   return (
     <section className="price-section">
       <div className="price-header">
@@ -190,21 +196,40 @@ function PriceFullPage({ priceData, loading, error, onRefresh }) {
   );
 }
 
-/* ===== 슬라이드 배너 (자동 순환) ===== */
+/* ===== 슬라이드 배너 (⑧ API 연동 + 자동 순환) ===== */
 function SlideBanner() {
   const [current, setCurrent] = useState(0);
-  const slides = [
-    { label: '접수중 · 중소벤처기업부', title: '2026년 스마트공장 보급·확산사업 참여기업 모집', meta: '신청기간 2026.03.01 ~ 2026.03.31', link: '/notices/1' },
-    { label: '접수중 · 식품의약품안전처', title: '식품제조 HACCP 컨설팅 지원사업 공고', meta: '신청기간 2026.02.15 ~ 2026.03.15', link: '/notices/2' },
-    { label: '접수중 · 경상북도', title: '[경북] AI 동반성장 주력산업 육성 지원사업 컨소시엄 모집', meta: '신청기간 2026.03.06 ~ 2026.03.16', link: '/notices/3' },
-  ];
+  const [slides, setSlides] = useState([]);
 
   useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const res = await fetch(API_BASE + '/api/smart-notices?page=1&limit=3&status=active');
+        const json = await res.json();
+        if (json.success && json.data.length > 0) {
+          setSlides(json.data.map(n => ({
+            label: getNoticeStatus(n).text + (n.jrsd_instt_nm ? ' · ' + n.jrsd_instt_nm : ''),
+            title: n.pblanc_nm,
+            meta: '신청기간 ' + formatNoticeDate(n),
+            link: '/notices/' + n.id
+          })));
+        }
+      } catch (err) {
+        console.error('배너 로딩 실패:', err);
+      }
+    };
+    fetchSlides();
+  }, []);
+
+  useEffect(() => {
+    if (slides.length === 0) return;
     const timer = setInterval(() => {
       setCurrent(prev => (prev + 1) % slides.length);
     }, 4000);
     return () => clearInterval(timer);
   }, [slides.length]);
+
+  if (slides.length === 0) return null;
 
   return (
     <section className="slide-banner">
@@ -229,12 +254,29 @@ function SlideBanner() {
   );
 }
 
-/* ===== 홈 - 지원사업 공고 ===== */
+/* ===== 홈 - 지원사업 공고 (① 필터 버튼 제거 + API 연동) ===== */
 function NoticePreview() {
-  const [filter, setFilter] = useState('전체');
-  const filtered = filter === '전체'
-    ? DUMMY_NOTICES_HOME
-    : DUMMY_NOTICES_HOME.filter(n => n.status === filter);
+  const [notices, setNotices] = useState([]);
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        const res = await fetch(API_BASE + '/api/smart-notices?page=1&limit=5');
+        const json = await res.json();
+        if (json.success) {
+          const sorted = [...json.data].sort((a, b) => {
+            const da = a.creat_pnttm || '';
+            const db = b.creat_pnttm || '';
+            return db.localeCompare(da);
+          });
+          setNotices(sorted);
+        }
+      } catch (err) {
+        console.error('공고 로딩 실패:', err);
+      }
+    };
+    fetchNotices();
+  }, []);
 
   return (
     <div className="card">
@@ -242,29 +284,19 @@ function NoticePreview() {
         <div className="card-title"><IconHome /> 지원사업 공고</div>
         <Link to="/smart-notices" className="card-more">전체보기 →</Link>
       </div>
-      <div className="filter-group">
-        {['전체', '접수중', '마감'].map(f => (
-          <button
-            key={f}
-            className={'filter-btn' + (filter === f ? ' active' : '')}
-            onClick={() => setFilter(f)}
-          >{f}</button>
-        ))}
-      </div>
       <ul className="notice-list">
-        {filtered.map(notice => (
-          <li key={notice.id} className="notice-item">
-            <div className="notice-info">
-              <Link to={'/notices/' + notice.id} className="notice-name">{notice.title}</Link>
-              <div className="notice-meta">{notice.org} · {notice.period}</div>
-            </div>
-            <span className={'badge' +
-              (notice.status === '접수중' ? ' badge-active' :
-               notice.status === '마감' ? ' badge-expired' : ' badge-ongoing')}>
-              {notice.status}
-            </span>
-          </li>
-        ))}
+        {notices.map(notice => {
+          const status = getNoticeStatus(notice);
+          return (
+            <li key={notice.id} className="notice-item">
+              <div className="notice-info">
+                <Link to={'/notices/' + notice.id} className="notice-name">{notice.pblanc_nm}</Link>
+                <div className="notice-meta">{notice.jrsd_instt_nm} · {formatNoticeDate(notice)}</div>
+              </div>
+              <span className={'badge ' + status.cls}>{status.text}</span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
