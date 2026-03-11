@@ -459,8 +459,12 @@ function FreePreview() {
             </span>
           </li>
         ))}
-        {posts.length === 0 && <li className="board-item"><span className="board-title-text" style= color: '#8395A7' >게시글이 없습니다.</span></li>}      
-        </ul>
+        {posts.length === 0 && (
+          <li className="board-item">
+            <span className="board-title-text text-muted">게시글이 없습니다.</span>
+          </li>
+        )}
+      </ul>
     </div>
   );
 }
@@ -499,7 +503,7 @@ function Board({ type, title }) {
           )}
         </div>
         {loading ? (
-          <p style= textAlign: 'center', padding:'40px', color:'#8395A7'>불러오는 중...</p>
+          <p className="loading-message">불러오는 중...</p>
         ) : (
           <>
             <table className="board-table">
@@ -514,7 +518,9 @@ function Board({ type, title }) {
               </thead>
               <tbody>
                 {posts.length === 0 ? (
-                  <tr><td colSpan="5" className="text-center" style=padding:'40px', color:'#8395A7'>게시글이 없습니다.</td></tr>
+                  <tr>
+                    <td colSpan="5" className="empty-message">게시글이 없습니다.</td>
+                  </tr>
                 ) : (
                   posts.map(post => (
                     <tr key={post.id} onClick={() => navigate('/board/' + type + '/' + post.id)} className="board-row">
@@ -558,7 +564,7 @@ function PostDetail({ type }) {
   const token = localStorage.getItem('token');
   let currentUserId = null;
   if (token) {
-    try { currentUserId = JSON.parse(atob(token.split('.')[1])).id; } catch {}
+    try { currentUserId = JSON.parse(atob(token.split('.')[1])).id; } catch (e) {}
   }
 
   useEffect(() => {
@@ -588,7 +594,9 @@ function PostDetail({ type }) {
         const err = await res.json();
         alert(err.message || '삭제 실패');
       }
-    } catch { alert('삭제 중 오류가 발생했습니다.'); }
+    } catch (e) {
+      alert('삭제 중 오류가 발생했습니다.');
+    }
   };
 
   const handleEdit = async () => {
@@ -608,7 +616,9 @@ function PostDetail({ type }) {
       } else {
         alert(json.message || '수정 실패');
       }
-    } catch { alert('수정 중 오류가 발생했습니다.'); }
+    } catch (e) {
+      alert('수정 중 오류가 발생했습니다.');
+    }
   };
 
   const handleComment = async () => {
@@ -628,11 +638,13 @@ function PostDetail({ type }) {
         setComments([...comments, comment]);
         setNewComment('');
       }
-    } catch { alert('댓글 작성 실패'); }
+    } catch (e) {
+      alert('댓글 작성 실패');
+    }
   };
 
-  if (loading) return <div className="main"><p>로딩 중...</p></div>;
-  if (!post) return <div className="main"><p>게시글을 찾을 수 없습니다.</p></div>;
+  if (loading) return <div className="main"><p className="loading-message">로딩 중...</p></div>;
+  if (!post) return <div className="main"><p className="loading-message">게시글을 찾을 수 없습니다.</p></div>;
 
   const isAuthor = currentUserId && post.user_id === currentUserId;
 
@@ -643,10 +655,19 @@ function PostDetail({ type }) {
         <div className="post-detail">
           {isEditing ? (
             <div className="edit-form">
-              <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
-                className="edit-title-input" placeholder="제목" />
-              <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-                className="edit-content-input" rows={12} placeholder="내용" />
+              <input
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                className="edit-title-input"
+                placeholder="제목"
+              />
+              <textarea
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                className="edit-content-input"
+                rows={12}
+                placeholder="내용"
+              />
               <div className="edit-actions">
                 <button onClick={() => setIsEditing(false)} className="btn-cancel">취소</button>
                 <button onClick={handleEdit} className="btn-save">저장</button>
@@ -662,14 +683,22 @@ function PostDetail({ type }) {
               </div>
               {isAuthor && (
                 <div className="post-actions">
-                  <button onClick={() => { setEditTitle(post.title); setEditContent(post.content); setIsEditing(true); }}
-                    className="btn-edit">수정</button>
-                  <button onClick={handleDelete} className="btn-delete">삭제</button>
+                  <button
+                    onClick={() => {
+                      setEditTitle(post.title);
+                      setEditContent(post.content);
+                      setIsEditing(true);
+                    }}
+                    className="btn-edit"
+                  >수정</button>
+                  <button onClick={handleDelete} className="btn-delete-post">삭제</button>
                 </div>
               )}
               <hr />
               <div className="post-content">
-                {post.content.split('\n').map((line, i) => <p key={i}>{line || <br />}</p>)}
+                {post.content.split('\n').map((line, i) => (
+                  <p key={i}>{line || '\u00A0'}</p>
+                ))}
               </div>
             </>
           )}
@@ -687,9 +716,14 @@ function PostDetail({ type }) {
             </div>
           ))}
           <div className="comment-input">
-            <input type="text" value={newComment} onChange={e => setNewComment(e.target.value)}
-              placeholder={token ? "댓글을 입력하세요..." : "로그인 후 댓글을 작성할 수 있습니다."}
-              className="input-comment" disabled={!token} />
+            <input
+              type="text"
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              placeholder={token ? '댓글을 입력하세요...' : '로그인 후 댓글을 작성할 수 있습니다.'}
+              className="input-comment"
+              disabled={!token}
+            />
             <button onClick={handleComment} className="btn-comment" disabled={!token}>등록</button>
           </div>
         </div>
@@ -706,7 +740,11 @@ function WritePost() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
-    if (!token) { alert('로그인이 필요합니다.'); navigate('/login'); return; }
+    if (!token) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     try {
       const res = await fetch(API_BASE + '/api/posts', {
         method: 'POST',
@@ -722,20 +760,34 @@ function WritePost() {
         const err = await res.json();
         alert(err.message || '글 작성 실패');
       }
-    } catch { alert('오류가 발생했습니다.'); }
+    } catch (e) {
+      alert('오류가 발생했습니다.');
+    }
   };
 
   return (
     <div className="main">
       <div className="card">
-        <h2 style=marginBottom: '20px'>✏️ 글쓰기</h2>
+        <h2 className="write-heading">✏️ 글쓰기</h2>
         <form onSubmit={handleSubmit}>
-          <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-            placeholder="제목을 입력하세요" required className="write-input" />
-          <textarea value={content} onChange={e => setContent(e.target.value)}
-            placeholder="내용을 입력하세요" required rows={15} className="write-textarea" />
-          <div style=display:'flex', gap:'8px', justifyContent:'flex-end', marginTop:'16px'>
-            <button type="button" onClick={() => navigate(-1)} className="btn-back">취소</button>
+          <input
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="제목을 입력하세요"
+            required
+            className="write-input"
+          />
+          <textarea
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            placeholder="내용을 입력하세요"
+            required
+            rows={15}
+            className="write-textarea"
+          />
+          <div className="form-footer">
+            <button type="button" onClick={() => navigate(-1)} className="btn-cancel">취소</button>
             <button type="submit" className="btn-write-small">등록</button>
           </div>
         </form>

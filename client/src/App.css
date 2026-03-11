@@ -911,3 +911,186 @@ main { flex: 1; }
   cursor: pointer; background: #fff; font-weight: 600; font-size: 13px;
 }
 .pagination-simple button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== 유틸리티 클래스 ===== */
+.text-muted { color: #8395A7; }
+
+.loading-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8395A7;
+  font-size: 14px;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #8395A7;
+  font-size: 14px;
+}
+
+/* ===== 글쓰기 버튼 (작은 사이즈) ===== */
+.btn-write-small {
+  padding: 8px 18px;
+  background: #4A90D9;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-write-small:hover { background: #357ABD; }
+
+/* ===== 글쓰기 페이지 ===== */
+.write-heading {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.write-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #E8ECF0;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+
+.write-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #E8ECF0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: inherit;
+}
+
+.form-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ===== 수정/삭제 버튼 ===== */
+.post-actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.btn-edit {
+  padding: 6px 14px;
+  border: 1px solid #4A90D9;
+  color: #4A90D9;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-edit:hover { background: #EBF3FF; }
+
+.btn-delete-post {
+  padding: 6px 14px;
+  border: 1px solid #E74C3C;
+  color: #E74C3C;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-delete-post:hover { background: #FFF5F5; }
+
+.btn-save {
+  padding: 8px 18px;
+  background: #4A90D9;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-save:hover { background: #357ABD; }
+
+.btn-cancel {
+  padding: 8px 18px;
+  background: #F0F2F5;
+  color: #8395A7;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-cancel:hover { background: #E8ECF0; }
+
+/* ===== 수정 폼 ===== */
+.edit-form {
+  padding: 8px 0;
+}
+
+.edit-title-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #E8ECF0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+
+.edit-content-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #E8ECF0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: inherit;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* ===== 페이지네이션 ===== */
+.pagination-simple {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #F0F2F5;
+}
+
+.pagination-simple button {
+  padding: 6px 16px;
+  border: 1px solid #E8ECF0;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #fff;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.pagination-simple button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-simple span {
+  font-size: 13px;
+  color: #8395A7;
+  font-weight: 600;
+}
