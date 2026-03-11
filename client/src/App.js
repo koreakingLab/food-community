@@ -91,6 +91,19 @@ const IconEye = () => (
     <circle cx="12" cy="12" r="3"/>
   </svg>
 );
+const IconLock = () => (
+  <svg className="icon-svg" viewBox="0 0 24 24">
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+const IconLogout = () => (
+  <svg className="icon-svg" viewBox="0 0 24 24">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" x2="9" y1="12" y2="12"/>
+  </svg>
+);
 
 // ========================================
 // AuthContext — 인증 상태 관리
@@ -1274,29 +1287,20 @@ function MyPage() {
             <div className="mypage-user-email">{user.email}</div>
           </div>
           <nav className="mypage-nav">
-            <button
-              className={activeTab === 'profile' ? 'active' : ''}
-              onClick={() => setActiveTab('profile')}
-            >
+            <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>
               <IconUser /> 내 정보
             </button>
-            <button
-              className={activeTab === 'password' ? 'active' : ''}
-              onClick={() => setActiveTab('password')}
-            >
-              🔒 비밀번호 변경
+            <button className={activeTab === 'password' ? 'active' : ''} onClick={() => setActiveTab('password')}>
+              <IconLock /> 비밀번호 변경
             </button>
-            <button
-              className={activeTab === 'posts' ? 'active' : ''}
-              onClick={() => setActiveTab('posts')}
-            >
+            <button className={activeTab === 'posts' ? 'active' : ''} onClick={() => setActiveTab('posts')}>
               <IconPen /> 내가 쓴 글
             </button>
-            <button
-              className={activeTab === 'comments' ? 'active' : ''}
-              onClick={() => setActiveTab('comments')}
-            >
+            <button className={activeTab === 'comments' ? 'active' : ''} onClick={() => setActiveTab('comments')}>
               <IconMessage /> 내가 쓴 댓글
+            </button>
+            <button onClick={() => { logout(); navigate('/'); }} className="mypage-logout-btn">
+              <IconLogout /> 로그아웃
             </button>
           </nav>
         </div>
