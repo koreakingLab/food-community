@@ -1,41 +1,18 @@
+// ========================================
+// routes/posts.js (인증 미들웨어 적용 완료 버전)
+// ========================================
 const router = require('express').Router();
 const { supabase } = require('../lib/supabase');
-const auth = require('../middleware/auth');
+const { authMiddleware } = require('./auth');
 
-// caching code
-const cache = new Map();
-const CACHE_TTL = 30 * 1000;
-
-function getCached(key) {
-  const entry = cache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.time > CACHE_TTL) {
-    cache.delete(key);
-    return null;
-  }
-  return entry.data;
-}
-
-function setCache(key, data) {
-  cache.set(key, { data, time: Date.now() });
-}
-
-function invalidatePostCache(boardType) {
-  for (const key of cache.keys()) {
-    if (key.startsWith(`posts:${boardType}`)) cache.delete(key);
-  }
-}
-
-// ========== 게시글 목록 조회 (캐싱 적용) ==========
+// ========================================
+// 게시글 목록 조회 (댓글 수 포함) — 인증 불필요
+// ========================================
 router.get('/', async (req, res) => {
   try {
     const { board_type = 'free', page = 1, limit = 20 } = req.query;
-    const cacheKey = `posts:${board_type}:${page}:${limit}`;
-
-    const cached = getCached(cacheKey);
-    if (cached) return res.json(cached);
-
     const offset = (page - 1) * limit;
+
     const { data: posts, count, error } = await supabase
       .from('posts')
       .select('*, users(nickname, company_name)', { count: 'exact' })
@@ -45,35 +22,39 @@ router.get('/', async (req, res) => {
 
     if (error) throw error;
 
+    // 각 게시글의 댓글 수 조회
     const postIds = posts.map(p => p.id);
     let commentCounts = {};
+
     if (postIds.length > 0) {
-      const { data: counts } = await supabase
-        .rpc('get_comment_counts', { post_ids: postIds });
-      if (counts) counts.forEach(c => { commentCounts[c.post_id] = c.count; });
+      const { data: counts } = await supabase.rpc('get_comment_counts', { post_ids: postIds });
+      if (counts) {
+        counts.forEach(c => { commentCounts[c.post_id] = c.comment_count; });
+      }
     }
 
-    const result = {
+    const result = posts.map(p => ({
+      ...p,
+      nickname: p.users?.nickname || '익명',
+      company_name: p.users?.company_name || null,
+      comment_count: commentCounts[p.id] || 0,
+    }));
+
+    res.json({
       success: true,
-      posts: posts.map(p => ({
-        ...p,
-        nickname: p.users?.nickname || '익명',
-        company_name: p.users?.company_name || null,
-        comment_count: commentCounts[p.id] || 0,
-      })),
+      posts: result,
       totalPages: Math.ceil((count || 0) / limit),
       currentPage: parseInt(page),
-    };
-
-    setCache(cacheKey, result);
-    res.json(result);
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: '서버 오류' });
   }
 });
 
-// ========== 게시글 상세 조회 ==========
+// ========================================
+// 게시글 상세 조회 — 인증 불필요
+// ========================================
 router.get('/:id', async (req, res) => {
   try {
     await supabase.rpc('increment_views', { row_id: parseInt(req.params.id) });
@@ -94,7 +75,11 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       success: true,
-      post: { ...post, nickname: post.users?.nickname, company_name: post.users?.company_name },
+      post: {
+        ...post,
+        nickname: post.users?.nickname || '익명',
+        company_name: post.users?.company_name || null,
+      },
       comments: (comments || []).map(c => ({
         ...c,
         nickname: c.users?.nickname || '익명',
@@ -107,18 +92,29 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ========== 게시글 작성 ==========
-router.post('/', auth, async (req, res) => {
+// ========================================
+// 게시글 작성 — 인증 필수
+// ========================================
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const { title, content, board_type } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ message: '제목과 내용을 입력해주세요.' });
+    }
+
     const { data, error } = await supabase
       .from('posts')
-      .insert({ user_id: req.user.id, board_type, title, content })
+      .insert({
+        user_id: req.user.id,
+        board_type: board_type || 'free',
+        title,
+        content
+      })
       .select()
       .single();
 
     if (error) throw error;
-    invalidatePostCache(board_type);
     res.status(201).json({ success: true, post: data });
   } catch (err) {
     console.error(err);
@@ -126,13 +122,20 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// ========== 게시글 수정 ==========
-router.put('/:id', auth, async (req, res) => {
+// ========================================
+// 게시글 수정 — 인증 필수 + 본인 확인
+// ========================================
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { title, content } = req.body;
 
+    // 본인 확인
     const { data: post } = await supabase
-      .from('posts').select('user_id, board_type').eq('id', req.params.id).single();
+      .from('posts')
+      .select('user_id')
+      .eq('id', req.params.id)
+      .single();
+
     if (!post) return res.status(404).json({ message: '게시글 없음' });
     if (post.user_id !== req.user.id) return res.status(403).json({ message: '권한 없음' });
 
@@ -144,7 +147,6 @@ router.put('/:id', auth, async (req, res) => {
       .single();
 
     if (error) throw error;
-    invalidatePostCache(post.board_type);  // ← post에서 가져옴
     res.json({ success: true, post: data });
   } catch (err) {
     console.error(err);
@@ -152,16 +154,22 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// ========== 게시글 삭제 ==========
-router.delete('/:id', auth, async (req, res) => {
+// ========================================
+// 게시글 삭제 — 인증 필수 + 본인 확인
+// ========================================
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
+    // 본인 확인
     const { data: post } = await supabase
-      .from('posts').select('user_id, board_type').eq('id', req.params.id).single();
+      .from('posts')
+      .select('user_id')
+      .eq('id', req.params.id)
+      .single();
+
     if (!post) return res.status(404).json({ message: '게시글 없음' });
     if (post.user_id !== req.user.id) return res.status(403).json({ message: '권한 없음' });
 
     await supabase.from('posts').delete().eq('id', req.params.id);
-    invalidatePostCache(post.board_type);  // ← post에서 가져옴
     res.json({ success: true, message: '삭제 완료' });
   } catch (err) {
     console.error(err);
@@ -169,18 +177,29 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-// ========== 댓글 작성 ==========
-router.post('/:id/comments', auth, async (req, res) => {
+// ========================================
+// 댓글 작성 — 인증 필수
+// ========================================
+router.post('/:id/comments', authMiddleware, async (req, res) => {
   try {
     const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
+    }
+
     const { data, error } = await supabase
       .from('comments')
-      .insert({ post_id: parseInt(req.params.id), user_id: req.user.id, content })
+      .insert({
+        post_id: parseInt(req.params.id),
+        user_id: req.user.id,
+        content: content.trim()
+      })
       .select('*, users(nickname, company_name)')
       .single();
 
     if (error) throw error;
-    invalidatePostCache('free');  // ← 문자열로 직접 전달
+
     res.status(201).json({
       ...data,
       nickname: data.users?.nickname || '익명',

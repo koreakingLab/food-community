@@ -1,5 +1,5 @@
 import HaccpList from './pages/HaccpList';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import SmartNotices from './SmartNotices';
@@ -91,32 +91,147 @@ const IconEye = () => (
   </svg>
 );
 
-/* ===== 헤더 ===== */
+// ========================================
+// AuthContext — 인증 상태 관리
+// ========================================
+const AuthContext = React.createContext(null);
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [loading, setLoading] = useState(true);
+
+  const API_BASE = 'https://food-community-production.up.railway.app';
+
+  // 앱 시작 시 저장된 토큰으로 사용자 정보 복원
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    if (savedToken && savedUser) {
+      try {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  // 로그인
+  const login = async (username, password) => {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '로그인에 실패했습니다.');
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setToken(data.token);
+    setUser(data.user);
+    return data;
+  };
+
+  // 로그아웃
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value= user, token, loading, login, logout >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// 커스텀 훅
+function useAuth() {
+  const context = React.useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+}
+
+// ========================================
+// Header 컴포넌트 (로그인 상태 연동)
+// ========================================
 function Header() {
-  const location = useLocation();
-  const isActive = (path) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setShowUserMenu(false);
+    navigate('/');
   };
 
   return (
     <header className="header">
       <div className="header-inner">
-        <Link to="/" className="logo">
-          <div className="logo-mark"><IconFactory /></div>
-          <span className="logo-text"><em>Food</em>Community</span>
-        </Link>
-        <nav className="nav">
-          <Link to="/" className={isActive('/') ? 'active' : ''}>홈</Link>
-          <Link to="/prices" className={isActive('/prices') ? 'active' : ''}>원자재 시세</Link>
-          <Link to="/smart-notices" className={isActive('/smart-notices') || isActive('/notices') ? 'active' : ''}>지원사업</Link>
-          <Link to="/haccp" className={isActive('/haccp') ? 'active' : ''}>HACCP</Link>
-          <Link to="/board/news" className={isActive('/board/news') ? 'active' : ''}>뉴스</Link>
-          <Link to="/board/free" className={isActive('/board/free') ? 'active' : ''}>게시판</Link>
+        <Link to="/" className="header-logo">🍽️ 식품산업 커뮤니티</Link>
+        <nav className="header-nav">
+          <Link to="/prices">농산물 시세</Link>
+          <Link to="/board/news">업계 뉴스</Link>
+          <Link to="/board/free">자유게시판</Link>
+          <Link to="/haccp">HACCP</Link>
+          <Link to="/smart-notices">스마트 공지</Link>
         </nav>
         <div className="header-actions">
-          <Link to="/login" className="btn-login">로그인</Link>
-          <Link to="/signup" className="btn-signup">회원가입</Link>
+          {user ? (
+            <div className="user-menu-wrapper" ref={menuRef}>
+              <button
+                className="user-menu-btn"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                <div className="user-avatar">
+                  {user.name ? user.name.charAt(0) : user.username.charAt(0)}
+                </div>
+                <span className="user-name">{user.name || user.username}</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M3 4.5l3 3 3-3"/>
+                </svg>
+              </button>
+              {showUserMenu && (
+                <div className="user-dropdown">
+                  <div className="user-dropdown-info">
+                    <strong>{user.name || user.username}</strong>
+                    <span>{user.email}</span>
+                  </div>
+                  <div className="user-dropdown-divider"></div>
+                  <button onClick={() => { navigate('/mypage'); setShowUserMenu(false); }}>
+                    마이페이지
+                  </button>
+                  <button onClick={handleLogout} className="logout-btn">
+                    로그아웃
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Link to="/login" className="btn-login">로그인</Link>
+              <Link to="/signup" className="btn-signup">회원가입</Link>
+            </>
+          )}
         </div>
       </div>
     </header>
@@ -558,9 +673,14 @@ function Board({ type, title }) {
 }
 
 /* ===== 게시글 상세 ===== */
+// ========================================
+// PostDetail 컴포넌트 (로그인 연동 완료 버전)
+// ========================================
 function PostDetail({ type }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, token } = useAuth();
+
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -569,12 +689,7 @@ function PostDetail({ type }) {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
 
-  const token = localStorage.getItem('token');
-  let currentUserId = null;
-  if (token) {
-    try { currentUserId = JSON.parse(atob(token.split('.')[1])).id; } catch (e) {}
-  }
-
+  // 게시글 + 댓글 불러오기
   useEffect(() => {
     fetch(API_BASE + '/api/posts/' + id)
       .then(res => res.json())
@@ -588,6 +703,7 @@ function PostDetail({ type }) {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // 게시글 삭제
   const handleDelete = async () => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
@@ -607,6 +723,7 @@ function PostDetail({ type }) {
     }
   };
 
+  // 게시글 수정
   const handleEdit = async () => {
     try {
       const res = await fetch(API_BASE + '/api/posts/' + id, {
@@ -629,9 +746,14 @@ function PostDetail({ type }) {
     }
   };
 
+  // 댓글 작성
   const handleComment = async () => {
     if (!newComment.trim()) return;
-    if (!token) { alert('로그인이 필요합니다.'); return; }
+    if (!user || !token) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     try {
       const res = await fetch(API_BASE + '/api/posts/' + id + '/comments', {
         method: 'POST',
@@ -654,7 +776,8 @@ function PostDetail({ type }) {
   if (loading) return <div className="main"><p className="loading-message">로딩 중...</p></div>;
   if (!post) return <div className="main"><p className="loading-message">게시글을 찾을 수 없습니다.</p></div>;
 
-  const isAuthor = currentUserId && post.user_id === currentUserId;
+  // 현재 로그인한 사용자가 작성자인지 확인
+  const isAuthor = user && post.user_id === user.id;
 
   return (
     <div className="main">
@@ -685,9 +808,9 @@ function PostDetail({ type }) {
             <>
               <h2>{post.title}</h2>
               <div className="post-meta">
-                <span><IconUser /> {post.nickname || '익명'}</span>
-                <span><IconCalendar /> {new Date(post.created_at).toLocaleString('ko-KR')}</span>
-                <span><IconEye /> {post.views}</span>
+                <span>✍️ {post.nickname || '익명'}</span>
+                <span>📅 {new Date(post.created_at).toLocaleString('ko-KR')}</span>
+                <span>👁️ {post.views}</span>
               </div>
               {isAuthor && (
                 <div className="post-actions">
@@ -712,8 +835,9 @@ function PostDetail({ type }) {
           )}
         </div>
 
+        {/* 댓글 섹션 */}
         <div className="comment-section">
-          <h3><IconMessage /> 댓글 ({comments.length})</h3>
+          <h3>💬 댓글 ({comments.length})</h3>
           {comments.map(c => (
             <div key={c.id} className="comment-item">
               <div className="comment-header">
@@ -723,17 +847,25 @@ function PostDetail({ type }) {
               <p>{c.content}</p>
             </div>
           ))}
-          <div className="comment-input">
-            <input
-              type="text"
-              value={newComment}
-              onChange={e => setNewComment(e.target.value)}
-              placeholder={token ? '댓글을 입력하세요...' : '로그인 후 댓글을 작성할 수 있습니다.'}
-              className="input-comment"
-              disabled={!token}
-            />
-            <button onClick={handleComment} className="btn-comment" disabled={!token}>등록</button>
-          </div>
+
+          {/* 로그인 상태에 따라 댓글 입력 or 로그인 안내 */}
+          {user ? (
+            <div className="comment-input">
+              <input
+                type="text"
+                value={newComment}
+                onChange={e => setNewComment(e.target.value)}
+                placeholder="댓글을 입력하세요..."
+                className="input-comment"
+                onKeyDown={e => { if (e.key === 'Enter') handleComment(); }}
+              />
+              <button onClick={handleComment} className="btn-comment">등록</button>
+            </div>
+          ) : (
+            <div className="comment-login-prompt">
+              <p>댓글을 작성하려면 <Link to="/login">로그인</Link>이 필요합니다.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -741,37 +873,37 @@ function PostDetail({ type }) {
 }
 
 function WritePost() {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const { user, token } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) {
+  // 로그인 안 되어 있으면 로그인 페이지로 이동
+  useEffect(() => {
+    if (!user) {
       alert('로그인이 필요합니다.');
       navigate('/login');
-      return;
     }
-    try {
-      const res = await fetch(API_BASE + '/api/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({ title, content, board_type: 'free' }),
-      });
-      if (res.ok) {
-        navigate('/board/free');
-      } else {
-        const err = await res.json();
-        alert(err.message || '글 작성 실패');
-      }
-    } catch (e) {
-      alert('오류가 발생했습니다.');
-    }
+  }, [user, navigate]);
+
+  // 글 등록 시 토큰을 헤더에 포함
+  const handleSubmit = async () => {
+    // ... 기존 코드에서 fetch 부분만 수정 ...
+    const res = await fetch(`${API_BASE}/api/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`   // ← 토큰 추가
+      },
+      body: JSON.stringify({
+        title,
+        content,
+        board_type: 'free',
+        author_id: user.id   // ← 로그인한 사용자 ID 사용
+      })
+    });
+    // ...
   };
+
+  if (!user) return null;
 
   return (
     <div className="main">
@@ -804,18 +936,132 @@ function WritePost() {
   );
 }
 
-/* ===== 로그인 ===== */
+// ========================================
+// LoginPage 컴포넌트
+// ========================================
 function LoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!username.trim()) {
+      setError('아이디를 입력해주세요.');
+      return;
+    }
+    if (!password) {
+      setError('비밀번호를 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await login(username.trim(), password);
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="login-wrapper">
+    <div className="login-container">
       <div className="login-box">
-        <h2>🔐 로그인</h2>
-        <input type="text" placeholder="아이디" className="input-field" />
-        <input type="password" placeholder="비밀번호" className="input-field" />
-        <button className="btn-login-submit">로그인</button>
-        <p className="login-footer">
-          아직 회원이 아니신가요? <Link to="/signup">회원가입</Link>
-        </p>
+        <div className="login-header">
+          <h2>로그인</h2>
+          <p>식품산업 커뮤니티에 오신 것을 환영합니다</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="login-form">
+          {error && (
+            <div className="login-error">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="#e74c3c" strokeWidth="1.5"/>
+                <path d="M8 4.5v4M8 10.5v.5" stroke="#e74c3c" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <div className="login-field">
+            <label>아이디</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="아이디를 입력하세요"
+              autoComplete="username"
+              autoFocus
+            />
+          </div>
+
+          <div className="login-field">
+            <label>비밀번호</label>
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호를 입력하세요"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.5">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.5">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="login-options">
+            <label className="remember-me">
+              <input type="checkbox" />
+              <span>아이디 기억하기</span>
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            className="login-submit-btn"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="btn-loading">
+                <span className="spinner"></span>
+                로그인 중...
+              </span>
+            ) : '로그인'}
+          </button>
+        </form>
+
+        <div className="login-divider">
+          <span>또는</span>
+        </div>
+
+        <div className="login-links">
+          <p>아직 회원이 아니신가요? <Link to="/signup">회원가입</Link></p>
+        </div>
       </div>
     </div>
   );
@@ -1215,31 +1461,34 @@ function App() {
   useEffect(() => { fetchPrices(); }, []);
 
   return (
-    <Router>
-      <div className="app">
-        <Header />
-        <main>
-          <Routes>
-            <Route path="/" element={
-              <HomePage priceData={priceData} priceLoading={priceLoading} priceError={priceError} onPriceRefresh={fetchPrices} />
-            } />
-            <Route path="/prices" element={
-              <PriceFullPage priceData={priceData} loading={priceLoading} error={priceError} onRefresh={fetchPrices} />
-            } />
-            <Route path="/board/news/*" element={<BoardWrapper type="news" title="업계 뉴스" />} />
-            <Route path="/board/free/*" element={<BoardWrapper type="free" title="자유게시판" />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/haccp" element={<HaccpList />} />
-            <Route path="/smart-notices" element={<SmartNotices />} />
-            <Route path="/notices/:id" element={<SmartNoticeDetail />} />
-            <Route path="/write/free" element={<WritePost />} />
-            <Route path="/signup" element={<SignupPage />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="app">
+          <Header />
+          <main>
+            <Routes>
+              <Route path="/" element={
+                <HomePage priceData={priceData} priceLoading={priceLoading} priceError={priceError} onPriceRefresh={fetchPrices} />
+              } />
+              <Route path="/prices" element={
+                <PriceFullPage priceData={priceData} loading={priceLoading} error={priceError} onRefresh={fetchPrices} />
+              } />
+              <Route path="/board/news/*" element={<BoardWrapper type="news" title="업계 뉴스" />} />
+              <Route path="/board/free/*" element={<BoardWrapper type="free" title="자유게시판" />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/haccp" element={<HaccpList />} />
+              <Route path="/smart-notices" element={<SmartNotices />} />
+              <Route path="/notices/:id" element={<SmartNoticeDetail />} />
+              <Route path="/write/free" element={<WritePost />} />
+              <Route path="/signup" element={<SignupPage />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
+}
 }
 
 export default App;

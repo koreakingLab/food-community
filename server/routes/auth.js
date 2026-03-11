@@ -184,4 +184,25 @@ router.post('/login', async (req, res) => {
   }
 });
 
-module.exports = router;
+// ========================================
+// JWT 인증 미들웨어 (routes/auth.js 맨 아래, module.exports 전)
+// ========================================
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: '인증이 필요합니다.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: '유효하지 않은 토큰입니다.' });
+  }
+}
+
+module.exports = { router, authMiddleware };
