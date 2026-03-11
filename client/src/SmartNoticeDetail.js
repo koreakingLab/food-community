@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { IconNewspaper, IconPen } from '../components/Icons';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://food-community-production.up.railway.app';
 
@@ -107,13 +108,13 @@ export default function SmartNoticeDetail() {
         <hr className="detail-divider" />
         {notice.bsns_sumry_cn && (
           <div className="detail-section">
-            <h3>사업개요</h3>
+            <h3><IconNewspaper /> 사업개요</h3>
             <p className="detail-summary">{stripHtml(notice.bsns_sumry_cn)}</p>
           </div>
         )}
         {notice.reqst_mth_papers_cn && (
           <div className="detail-section">
-            <h3>신청방법 및 제출서류</h3>
+            <h3><IconPen /> 신청방법 및 제출서류</h3>
             <p className="detail-summary">{stripHtml(notice.reqst_mth_papers_cn)}</p>
           </div>
         )}
