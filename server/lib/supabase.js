@@ -13,4 +13,4 @@ const supabase = createClient(
   }
 );
 
-module.exports = { superbase };
+module.exports = { supabase };
