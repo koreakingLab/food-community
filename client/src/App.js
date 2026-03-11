@@ -1,6 +1,6 @@
 import HaccpList from './pages/HaccpList';
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import SmartNotices from './SmartNotices';
 import SmartNoticeDetail from './SmartNoticeDetail';
@@ -165,8 +165,14 @@ function useAuth() {
 function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
+
+  const isActive = (path) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  }
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -192,12 +198,13 @@ function Header() {
           <div className="logo-mark"><IconFactory /></div>
           <span className="logo-text"><em>Food</em>Community</span>
         </Link>
-        <nav className="header-nav">
-          <Link to="/prices">농산물 시세</Link>
-          <Link to="/board/news">업계 뉴스</Link>
-          <Link to="/board/free">자유게시판</Link>
-          <Link to="/haccp">HACCP</Link>
-          <Link to="/smart-notices">스마트 공지</Link>
+        <nav className="nav">
+          <Link to="/" className={isActive('/') ? 'active' : ''}>홈</Link>
+          <Link to="/prices" className={isActive('/prices') ? 'active' : ''}>원자재 시세</Link>
+          <Link to="/smart-notices" className={isActive('/smart-notices') || isActive('/notices') ? 'active' : ''}>지원사업</Link>
+          <Link to="/haccp" className={isActive('/haccp') ? 'active' : ''}>HACCP</Link>
+          <Link to="/board/news" className={isActive('/board/news') ? 'active' : ''}>뉴스</Link>
+          <Link to="/board/free" className={isActive('/board/free') ? 'active' : ''}>게시판</Link>
         </nav>
         <div className="header-actions">
           {user ? (
