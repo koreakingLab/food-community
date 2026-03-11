@@ -188,7 +188,10 @@ function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <Link to="/" className="header-logo">🍽️ 식품산업 커뮤니티</Link>
+        <Link to="/" className="logo">
+          <div className="logo-mark"><IconFactory /></div>
+          <span className="logo-text"><em>Food</em>Community</span>
+        </Link>
         <nav className="header-nav">
           <Link to="/prices">농산물 시세</Link>
           <Link to="/board/news">업계 뉴스</Link>
