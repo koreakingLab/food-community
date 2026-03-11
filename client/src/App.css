@@ -2056,3 +2056,53 @@ main { flex: 1; }
 .mypage-logout-btn:hover {
   background: #fef2f2 !important;
 }
+
+/* 프로필 섹션 구분 */
+.profile-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2563eb;
+  margin-top: 28px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eff6ff;
+}
+
+.profile-section-title:first-of-type {
+  margin-top: 0;
+}
+
+.profile-section-title .icon-svg {
+  width: 18px;
+  height: 18px;
+  stroke: #2563eb;
+}
+
+/* 프로필 값 스타일 강화 */
+.profile-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f9fafb;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+}
+
+.profile-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-value {
+  font-size: 15px;
+  color: #1f2937;
+  font-weight: 500;
+  padding: 0;
+}

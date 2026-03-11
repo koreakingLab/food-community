@@ -1317,6 +1317,9 @@ function MyPage() {
               ) : profile && !isEditing ? (
                 <>
                   {saveMsg && <p className="msg-success mypage-msg">{saveMsg}</p>}
+
+                  {/* 기본 정보 */}
+                  <div className="profile-section-title"><IconUser /> 기본 정보</div>
                   <div className="profile-grid">
                     <div className="profile-group">
                       <span className="profile-label">아이디</span>
@@ -1331,6 +1334,15 @@ function MyPage() {
                       <span className="profile-value">{profile.birthdate || '-'}</span>
                     </div>
                     <div className="profile-group">
+                      <span className="profile-label">가입일</span>
+                      <span className="profile-value">{new Date(profile.created_at).toLocaleDateString('ko-KR')}</span>
+                    </div>
+                  </div>
+
+                  {/* 연락처 정보 */}
+                  <div className="profile-section-title"><IconMessage /> 연락처</div>
+                  <div className="profile-grid">
+                    <div className="profile-group">
                       <span className="profile-label">이메일</span>
                       <span className="profile-value">{profile.email || '-'}</span>
                     </div>
@@ -1342,6 +1354,11 @@ function MyPage() {
                       <span className="profile-label">연락처</span>
                       <span className="profile-value">{profile.tel || '-'}</span>
                     </div>
+                  </div>
+
+                  {/* 업체 정보 */}
+                  <div className="profile-section-title"><IconFactory /> 업체 정보</div>
+                  <div className="profile-grid">
                     <div className="profile-group">
                       <span className="profile-label">업체명</span>
                       <span className="profile-value">{profile.company_name || '-'}</span>
@@ -1362,15 +1379,17 @@ function MyPage() {
                           : '-'}
                       </span>
                     </div>
-                    <div className="profile-group">
-                      <span className="profile-label">가입일</span>
-                      <span className="profile-value">{new Date(profile.created_at).toLocaleDateString('ko-KR')}</span>
-                    </div>
+                  </div>
+
+                  {/* 기타 */}
+                  <div className="profile-section-title"><IconShield /> 기타</div>
+                  <div className="profile-grid">
                     <div className="profile-group">
                       <span className="profile-label">마케팅 수신</span>
                       <span className="profile-value">{profile.marketing_agreed ? '동의' : '미동의'}</span>
                     </div>
                   </div>
+
                   <div className="profile-actions">
                     <button onClick={() => setIsEditing(true)} className="btn-edit">정보 수정</button>
                   </div>
