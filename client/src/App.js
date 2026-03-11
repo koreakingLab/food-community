@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate, u
 import './App.css';
 import SmartNotices from './SmartNotices';
 import SmartNoticeDetail from './SmartNoticeDetail';
+import useCachedFetch from './hooks/useCachedFetch';
 
 const API_BASE = 'https://food-community-production.up.railway.app';
 
@@ -412,20 +413,14 @@ function HaccpPreview() {
 
 /* ===== 홈 - 자유게시판 ===== */
 function FreePreview() {
-  const [posts, setPosts] = useState([]);
+  const { data, loading } = useCachedFetch(
+    API_BASE + '/api/posts?board_type=free&limit=5'
+  );
+  const posts = data?.posts || [];
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await fetch(API_BASE + '/api/posts?board_type=free&limit=5');
-        const json = await res.json();
-        if (json.success) setPosts(json.posts);
-      } catch (err) {
-        console.error('자유게시판 로딩 실패:', err);
-      }
-    };
-    fetchPosts();
-  }, []);
+  if (loading && posts.length === 0) {
+    return <p className="loading-message">불러오는 중...</p>;
+  }
 
   return (
     <div className="card">
@@ -433,24 +428,24 @@ function FreePreview() {
         <div className="card-title"><IconMessage /> 자유게시판</div>
         <Link to="/board/free" className="card-more">전체보기 →</Link>
       </div>
-      <ul className="board-list">
-        {posts.map(post => (
-          <li key={post.id} className="board-item">
-            <div className="board-title-wrap">
-              <Link to={'/board/free/' + post.id} className="board-title-text">{post.title}</Link>
-              {post.comment_count > 0 && <span className="board-comment">[{post.comment_count}]</span>}
-            </div>
-            <span className="board-date">
-              {new Date(post.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
-            </span>
-          </li>
-        ))}
-        {posts.length === 0 && (
-          <li className="board-item">
-            <span className="board-title-text text-muted">게시글이 없습니다.</span>
-          </li>
-        )}
-      </ul>
+        <ul className="board-list">
+          {posts.map(post => (
+            <li key={post.id} className="board-item">
+              <div className="board-title-wrap">
+                <Link to={'/board/free/' + post.id} className="board-title-text">{post.title}</Link>
+                {post.comment_count > 0 && <span className="board-comment">[{post.comment_count}]</span>}
+              </div>
+              <span className="board-date">
+                {new Date(post.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
+              </span>
+            </li>
+          ))}
+          {posts.length === 0 && (
+            <li className="board-item">
+              <span className="board-title-text text-muted">게시글이 없습니다.</span>
+            </li>
+          )}
+        </ul>
     </div>
   );
 }
