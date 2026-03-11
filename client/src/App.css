@@ -757,6 +757,7 @@ main { flex: 1; }
 /* ===== 상세 페이지 ===== */
 .detail-page { max-width: 800px; margin: 24px auto; padding: 0 20px; }
 .detail-page .card { padding: 32px; }
+.detail-status-card { text-align: center; padding: 60px 20px; }
 .detail-header { margin-bottom: 20px; }
 .back-link { color: #4A90D9; text-decoration: none; font-size: 14px; }
 .back-link:hover { text-decoration: underline; }

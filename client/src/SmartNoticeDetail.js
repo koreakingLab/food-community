@@ -26,7 +26,7 @@ export default function SmartNoticeDetail() {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/smart-notices/${id}`);
+        const res = await fetch(API_BASE + '/api/smart-notices/' + id);
         const json = await res.json();
         if (json.success) setNotice(json.data);
       } catch (err) {
@@ -38,32 +38,31 @@ export default function SmartNoticeDetail() {
     fetchDetail();
   }, [id]);
 
-  const formatDate = (notice) => {
-    if (notice.reqst_date_raw && !notice.reqst_begin_de) return notice.reqst_date_raw;
-    const begin = notice.reqst_begin_de
-      ? new Date(notice.reqst_begin_de).toLocaleDateString('ko-KR') : '-';
-    const end = notice.reqst_end_de
-      ? new Date(notice.reqst_end_de).toLocaleDateString('ko-KR') : '-';
-    return `${begin} ~ ${end}`;
+  const formatDate = (n) => {
+    if (n.reqst_date_raw && !n.reqst_begin_de) return n.reqst_date_raw;
+    const begin = n.reqst_begin_de
+      ? new Date(n.reqst_begin_de).toLocaleDateString('ko-KR') : '-';
+    const end = n.reqst_end_de
+      ? new Date(n.reqst_end_de).toLocaleDateString('ko-KR') : '-';
+    return begin + ' ~ ' + end;
   };
 
-  const getStatus = (notice) => {
-    if (!notice.reqst_end_de) return { text: '상시', className: 'badge ongoing' };
+  const getStatus = (n) => {
+    if (!n.reqst_end_de) return { text: '상시', className: 'badge ongoing' };
     const today = new Date().toISOString().split('T')[0];
-    if (notice.reqst_end_de >= today) return { text: '접수중', className: 'badge active' };
+    if (n.reqst_end_de >= today) return { text: '접수중', className: 'badge active' };
     return { text: '마감', className: 'badge expired' };
   };
 
-  // ⑦ 원문 URL: DB의 pblanc_url 우선, 없으면 pblanc_id로 기업마당 URL 생성
-  const getOriginalUrl = (notice) => {
-    if (notice.pblanc_url && notice.pblanc_url.startsWith('http')) return notice.pblanc_url;
-    if (notice.pblanc_id) return `https://www.bizinfo.go.kr/web/lay1/bbs/S1T122C128/AS/74/view.do?pblancId=${notice.pblanc_id}`;
+  const getOriginalUrl = (n) => {
+    if (n.pblanc_url && n.pblanc_url.startsWith('http')) return n.pblanc_url;
+    if (n.pblanc_id) return 'https://www.bizinfo.go.kr/web/lay1/bbs/S1T122C128/AS/74/view.do?pblancId=' + n.pblanc_id;
     return null;
   };
 
   if (loading) return (
     <div className="detail-page">
-      <div className="card" style=textAlign:'center',padding:'60px 20px'>
+      <div className="card detail-status-card">
         <p>⏳ 로딩 중...</p>
       </div>
     </div>
@@ -71,7 +70,7 @@ export default function SmartNoticeDetail() {
 
   if (!notice) return (
     <div className="detail-page">
-      <div className="card" style=textAlign:'center',padding:'60px 20px'>
+      <div className="card detail-status-card">
         <p>공고를 찾을 수 없습니다.</p>
       </div>
     </div>
