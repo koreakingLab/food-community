@@ -22,6 +22,7 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/prices', require('./routes/prices'));
 app.use('/api/news', require('./routes/news'));
 app.use('/api/smart-notices', smartNoticesRouter);
+app.use('/api/mypage', require('./routes/mypage'));
 
 // ============================================
 // ===== KAMIS API (농산물유통정보) 연동 =====
