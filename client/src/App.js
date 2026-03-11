@@ -1127,6 +1127,12 @@ function MyPage() {
   const [commentsTotalPages, setCommentsTotalPages] = useState(1);
   const [commentsLoading, setCommentsLoading] = useState(false);
 
+  // 비밀번호 확인 모달
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [verifyPassword, setVerifyPassword] = useState('');
+  const [verifyMsg, setVerifyMsg] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+
   // 로그인 체크
   useEffect(() => {
     if (!user) {
@@ -1214,6 +1220,39 @@ function MyPage() {
       }
     } catch (err) {
       setSaveMsg('오류가 발생했습니다.');
+    }
+  };
+
+  // 비밀번호 확인 후 수정모드 진입
+  const handleVerifyPassword = async () => {
+    setVerifyMsg('');
+    if (!verifyPassword.trim()) {
+      setVerifyMsg('비밀번호를 입력해주세요.');
+      return;
+    }
+    setVerifyLoading(true);
+    try {
+      const res = await fetch(API_BASE + '/api/mypage/verify-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ password: verifyPassword }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setShowVerifyModal(false);
+        setVerifyPassword('');
+        setVerifyMsg('');
+        setIsEditing(true);
+      } else {
+        setVerifyMsg(json.message || '비밀번호가 일치하지 않습니다.');
+      }
+    } catch (err) {
+      setVerifyMsg('오류가 발생했습니다.');
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
@@ -1391,7 +1430,7 @@ function MyPage() {
                   </div>
 
                   <div className="profile-actions">
-                    <button onClick={() => setIsEditing(true)} className="btn-edit">정보 수정</button>
+                    <button onClick={() => { setShowVerifyModal(true); setVerifyPassword(''); setVerifyMsg(''); }} className="btn-edit">정보 수정</button>
                   </div>
                 </>
               ) : profile && isEditing ? (
@@ -1578,6 +1617,34 @@ function MyPage() {
           )}
 
         </div>
+
+        {/* 비밀번호 확인 모달 */}
+        {showVerifyModal && (
+          <div className="modal-overlay" onClick={() => setShowVerifyModal(false)}>
+            <div className="modal-content verify-modal" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowVerifyModal(false)}>✕</button>
+              <div className="verify-modal-icon"><IconLock /></div>
+              <h3 className="verify-modal-title">비밀번호 확인</h3>
+              <p className="verify-modal-desc">정보 수정을 위해 현재 비밀번호를 입력해주세요.</p>
+              <input
+                type="password"
+                value={verifyPassword}
+                onChange={(e) => setVerifyPassword(e.target.value)}
+                placeholder="비밀번호 입력"
+                className="verify-modal-input"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') handleVerifyPassword(); }}
+              />
+              {verifyMsg && <p className="msg-error verify-modal-msg">{verifyMsg}</p>}
+              <div className="verify-modal-actions">
+                <button onClick={() => setShowVerifyModal(false)} className="btn-cancel">취소</button>
+                <button onClick={handleVerifyPassword} className="btn-save" disabled={verifyLoading}>
+                  {verifyLoading ? '확인 중...' : '확인'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

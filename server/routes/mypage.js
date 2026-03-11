@@ -54,6 +54,34 @@ router.put('/profile', async (req, res) => {
   }
 });
 
+// ===== 비밀번호 확인 (정보수정 전 인증) =====
+router.post('/verify-password', async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ success: false, message: '비밀번호를 입력해주세요.' });
+    }
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('password_hash')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error) throw error;
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: '비밀번호가 일치하지 않습니다.' });
+    }
+
+    res.json({ success: true, message: '인증되었습니다.' });
+  } catch (err) {
+    console.error('[MyPage] 비밀번호 확인 에러:', err.message);
+    res.status(500).json({ success: false, message: '인증 실패' });
+  }
+});
+
 // ===== 비밀번호 변경 =====
 router.put('/password', async (req, res) => {
   try {

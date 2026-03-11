@@ -2106,3 +2106,68 @@ main { flex: 1; }
   font-weight: 500;
   padding: 0;
 }
+
+/* 비밀번호 확인 모달 */
+.verify-modal {
+  max-width: 400px;
+  text-align: center;
+  padding: 32px;
+}
+
+.verify-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.verify-modal-icon .icon-svg {
+  width: 28px;
+  height: 28px;
+  stroke: #2563eb;
+}
+
+.verify-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.verify-modal-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.verify-modal-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.verify-modal-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.verify-modal-msg {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.verify-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 20px;
+}
