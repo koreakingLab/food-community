@@ -19,23 +19,15 @@ router.get('/', async (req, res) => {
     if (error) throw error;
 
     // 각 게시글의 댓글 수 조회
+    // ✅ 변경 후 — DB 요청 2번이면 끝
     const postIds = posts.map(p => p.id);
     let commentCounts = {};
 
     if (postIds.length > 0) {
-      const { data: counts, error: countErr } = await supabase
+      const { data: counts } = await supabase
         .rpc('get_comment_counts', { post_ids: postIds });
 
-      // RPC가 없으면 개별 조회 폴백
-      if (countErr) {
-        for (const pid of postIds) {
-          const { count: c } = await supabase
-            .from('comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', pid);
-          commentCounts[pid] = c || 0;
-        }
-      } else {
+      if (counts) {
         counts.forEach(c => { commentCounts[c.post_id] = c.count; });
       }
     }
