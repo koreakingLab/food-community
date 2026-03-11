@@ -64,6 +64,33 @@ const IconMessage = () => (
   </svg>
 );
 
+const IconPen = () => (
+  <svg className="icon-svg" viewBox="0 0 24 24">
+    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+    <path d="m15 5 4 4"/>
+  </svg>
+);
+const IconUser = () => (
+  <svg className="icon-svg" viewBox="0 0 24 24">
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+const IconCalendar = () => (
+  <svg className="icon-svg" viewBox="0 0 24 24">
+    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+    <line x1="16" x2="16" y1="2" y2="6"/>
+    <line x1="8" x2="8" y1="2" y2="6"/>
+    <line x1="3" x2="21" y1="10" y2="10"/>
+  </svg>
+);
+const IconEye = () => (
+  <svg className="icon-svg" viewBox="0 0 24 24">
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
 /* ===== 헤더 ===== */
 function Header() {
   const location = useLocation();
@@ -480,7 +507,7 @@ function Board({ type, title }) {
             {type === 'news' ? <IconNewspaper /> : <IconMessage />} {title}
           </div>
           {type === 'free' && (
-            <button onClick={() => navigate('/write/free')} className="btn-write-small">✏️ 글쓰기</button>
+            <button onClick={() => navigate('/write/free')} className="btn-write-small"><IconPen /> 글쓰기</button>
           )}
         </div>
         {loading ? (
@@ -658,9 +685,9 @@ function PostDetail({ type }) {
             <>
               <h2>{post.title}</h2>
               <div className="post-meta">
-                <span>✍️ {post.nickname || '익명'}</span>
-                <span>📅 {new Date(post.created_at).toLocaleString('ko-KR')}</span>
-                <span>👁️ {post.views}</span>
+                <span><IconUser /> {post.nickname || '익명'}</span>
+                <span><IconCalendar /> {new Date(post.created_at).toLocaleString('ko-KR')}</span>
+                <span><IconEye /> {post.views}</span>
               </div>
               {isAuthor && (
                 <div className="post-actions">
@@ -686,7 +713,7 @@ function PostDetail({ type }) {
         </div>
 
         <div className="comment-section">
-          <h3>💬 댓글 ({comments.length})</h3>
+          <h3><IconMessage /> 댓글 ({comments.length})</h3>
           {comments.map(c => (
             <div key={c.id} className="comment-item">
               <div className="comment-header">
@@ -749,7 +776,7 @@ function WritePost() {
   return (
     <div className="main">
       <div className="card">
-        <h2 className="write-heading">✏️ 글쓰기</h2>
+        <h2 className="write-heading"><IconPen /> 글쓰기</h2>
         <form onSubmit={handleSubmit}>
           <input
             type="text"

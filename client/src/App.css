@@ -1094,3 +1094,19 @@ main { flex: 1; }
   color: #8395A7;
   font-weight: 600;
 }
+
+.btn-write-small .icon-svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+  margin-right: 4px;
+}
+
+.post-meta .icon-svg,
+.comment-section h3 .icon-svg,
+.write-heading .icon-svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
