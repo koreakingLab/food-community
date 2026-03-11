@@ -17,7 +17,7 @@ app.use(cors({
 app.use(express.json());
 app.use(haccpRoutes);   
 // ===== 기존 라우트 =====
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth').router);
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/prices', require('./routes/prices'));
 app.use('/api/news', require('./routes/news'));
