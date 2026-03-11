@@ -196,15 +196,19 @@ function PriceFullPage({ priceData, loading, error, onRefresh }) {
   );
 }
 
-/* ===== 슬라이드 배너 (⑧ API 연동 + 자동 순환) ===== */
+/* ===== 슬라이드 배너 (⑧ API 연동 + 폴백) ===== */
+const FALLBACK_SLIDES = [
+  { label: '스마트제조 지원사업', title: '식품제조업체를 위한 최신 지원사업 공고를 확인하세요', meta: '지원사업 전체보기에서 상세 내용을 확인할 수 있습니다', link: '/smart-notices' }
+];
+
 function SlideBanner() {
   const [current, setCurrent] = useState(0);
-  const [slides, setSlides] = useState([]);
+  const [slides, setSlides] = useState(FALLBACK_SLIDES);
 
   useEffect(() => {
     const fetchSlides = async () => {
       try {
-        const res = await fetch(API_BASE + '/api/smart-notices?page=1&limit=3&status=active');
+        const res = await fetch(API_BASE + '/api/smart-notices?page=1&limit=3');
         const json = await res.json();
         if (json.success && json.data.length > 0) {
           setSlides(json.data.map(n => ({
@@ -222,14 +226,12 @@ function SlideBanner() {
   }, []);
 
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrent(prev => (prev + 1) % slides.length);
     }, 4000);
     return () => clearInterval(timer);
   }, [slides.length]);
-
-  if (slides.length === 0) return null;
 
   return (
     <section className="slide-banner">
@@ -240,15 +242,17 @@ function SlideBanner() {
       </div>
       <div className="slide-actions">
         <Link to={slides[current].link} className="slide-btn">자세히 보기 →</Link>
-        <div className="slide-nav">
-          {slides.map((_, idx) => (
-            <div
-              key={idx}
-              className={'slide-dot' + (idx === current ? ' active' : '')}
-              onClick={() => setCurrent(idx)}
-            />
-          ))}
-        </div>
+        {slides.length > 1 && (
+          <div className="slide-nav">
+            {slides.map((_, idx) => (
+              <div
+                key={idx}
+                className={'slide-dot' + (idx === current ? ' active' : '')}
+                onClick={() => setCurrent(idx)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
