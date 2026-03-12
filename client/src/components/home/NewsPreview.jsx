@@ -10,7 +10,7 @@ function NewsPreview() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await fetch(API_BASE + '/api/news/search?query=식품제조업 식품산업&display=5&sort=date');
+        fetch(API_BASE + '/api/news/search?query="식품제조" OR "식품산업" OR "식품업계" OR "HACCP"&display=5&sort=date')
         const json = await res.json();
         if (json.success) {
           setArticles(json.articles);

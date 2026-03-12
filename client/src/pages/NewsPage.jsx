@@ -3,11 +3,11 @@ import { IconNewspaper } from '../components/Icons';
 import { API_BASE } from '../utils/constants';
 
 const SEARCH_KEYWORDS = [
-  { label: '식품제조업', query: '식품제조업' },
-  { label: '식품산업', query: '식품산업' },
-  { label: 'HACCP', query: 'HACCP 식품' },
-  { label: '식품안전', query: '식품안전' },
-  { label: '식품 수출', query: '식품 수출' },
+  { label: '식품제조', query: '"식품제조" OR "식품공장" OR "식품업체"' },
+  { label: '식품산업', query: '"식품산업" OR "식품업계" OR "식품시장"' },
+  { label: 'HACCP', query: '"HACCP" OR "해썹" OR "식품인증"' },
+  { label: '식품안전', query: '"식품안전" OR "식약처" OR "식품위생"' },
+  { label: '원료/포장', query: '"식품원료" OR "식품포장" OR "식자재"' },
 ];
 
 function NewsPage() {
