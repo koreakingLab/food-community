@@ -6,6 +6,7 @@ const app = express();
 const haccpRoutes = require('./routes/haccp');
 const cron = require('node-cron');
 const smartNoticesRouter = require('./routes/smartNotices');
+const newsRoutes = require('./routes/news');
 
 // ===== 미들웨어 =====
 app.use(cors({
@@ -23,6 +24,7 @@ app.use('/api/prices', require('./routes/prices'));
 app.use('/api/news', require('./routes/news'));
 app.use('/api/smart-notices', smartNoticesRouter);
 app.use('/api/mypage', require('./routes/mypage'));
+app.use('/api/news', newsRoutes);
 
 // ============================================
 // ===== KAMIS API (농산물유통정보) 연동 =====
