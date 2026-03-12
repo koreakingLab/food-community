@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IconNewspaper } from '../Icons';
 import { API_BASE } from '../../utils/constants';
-import { Link } from 'react-route-dom';
+import { Link } from 'react-router-dom';
 
 function NewsPreview() {
   const [articles, setArticles] = useState([]);
