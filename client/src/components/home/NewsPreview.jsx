@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IconNewspaper } from '../Icons';
 import { API_BASE } from '../../utils/constants';
+import { Link } from 'react-route-dom';
 
 function NewsPreview() {
   const [articles, setArticles] = useState([]);
@@ -33,7 +34,7 @@ function NewsPreview() {
     <div className="card">
       <div className="card-header">
         <div className="card-title"><IconNewspaper /> 업계 뉴스</div>
-        <a href="/board/news" className="card-more">전체보기 →</a>
+        <Link to="/news" className="card-more">전체보기 →</Link>
       </div>
       {loading ? (
         <p className="loading-message">불러오는 중...</p>

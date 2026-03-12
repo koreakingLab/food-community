@@ -15,6 +15,7 @@ import SmartNotices from './SmartNotices';
 import SmartNoticeDetail from './SmartNoticeDetail';
 import HaccpList from './pages/HaccpList';
 import MyPage from './pages/MyPage';
+import NewsPage from './pages/NewsPage';
 
 /* ===== App ===== */
 function App() {
@@ -54,7 +55,6 @@ function App() {
               <Route path="/prices" element={
                 <PricesPage priceData={priceData} loading={priceLoading} error={priceError} onRefresh={fetchPrices} />
               } />
-              <Route path="/board/news/*" element={<BoardWrapper type="news" title="업계 뉴스" />} />
               <Route path="/board/free/*" element={<BoardWrapper type="free" title="자유게시판" />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/haccp" element={<HaccpList />} />
@@ -63,6 +63,7 @@ function App() {
               <Route path="/write/free" element={<WritePost />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/mypage" element={<MyPage />} />
+              <Route path="/news" element={<NewsPage/>} />
             </Routes>
           </main>
           <Footer />

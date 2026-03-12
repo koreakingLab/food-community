@@ -44,7 +44,7 @@ function Header() {
           <Link to="/prices" className={isActive('/prices') ? 'active' : ''}>원자재 시세</Link>
           <Link to="/smart-notices" className={isActive('/smart-notices') || isActive('/notices') ? 'active' : ''}>지원사업</Link>
           <Link to="/haccp" className={isActive('/haccp') ? 'active' : ''}>HACCP</Link>
-          <Link to="/board/news" className={isActive('/board/news') ? 'active' : ''}>뉴스</Link>
+          <Link to="/news" className={isActive('/news') ? 'active' : ''}>뉴스</Link>
           <Link to="/board/free" className={isActive('/board/free') ? 'active' : ''}>게시판</Link>
         </nav>
         <div className="header-actions">
