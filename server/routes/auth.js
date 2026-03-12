@@ -54,6 +54,105 @@ router.post('/check-email', async (req, res) => {
   }
 });
 
+// ========== 사업자번호 상태조회 ==========
+router.post('/verify-business', async (req, res) => {
+  try {
+    const { business_number } = req.body;
+    
+    if (!business_number) {
+      return res.status(400).json({ success: false, message: '사업자번호를 입력해주세요.' });
+    }
+
+    // 하이픈 제거, 숫자만 추출
+    const cleanNumber = business_number.replace(/[^0-9]/g, '');
+
+    if (cleanNumber.length !== 10) {
+      return res.status(400).json({ success: false, message: '사업자번호는 10자리 숫자여야 합니다.' });
+    }
+
+    const NTS_API_KEY = process.env.NTS_API_KEY;
+    if (!NTS_API_KEY) {
+      console.error('NTS_API_KEY 환경변수가 설정되지 않았습니다.');
+      return res.status(500).json({ success: false, message: '서버 설정 오류입니다.' });
+    }
+
+    // 국세청 상태조회 API 호출
+    const apiUrl = `https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=${encodeURIComponent(NTS_API_KEY)}`;
+    
+    const apiRes = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        b_no: [cleanNumber]
+      }),
+    });
+
+    if (!apiRes.ok) {
+      console.error('국세청 API 응답 오류:', apiRes.status);
+      return res.status(500).json({ success: false, message: '사업자번호 조회 중 오류가 발생했습니다.' });
+    }
+
+    const apiData = await apiRes.json();
+
+    if (!apiData.data || apiData.data.length === 0) {
+      return res.json({ success: false, message: '조회 결과가 없습니다.' });
+    }
+
+    const bizInfo = apiData.data[0];
+    const taxType = bizInfo.tax_type;
+    // b_stt_cd: 01=영업중, 02=휴업, 03=폐업
+    const statusCode = bizInfo.b_stt_cd;
+    const statusName = bizInfo.b_stt; // "계속사업자", "휴업자", "폐업자"
+
+    // "국세청에 등록되지 않은 사업자등록번호입니다" 체크
+    if (taxType === '국세청에 등록되지 않은 사업자등록번호입니다.') {
+      return res.json({
+        success: false,
+        message: '등록되지 않은 사업자번호입니다.',
+        status: 'unregistered',
+      });
+    }
+
+    if (statusCode === '01') {
+      return res.json({
+        success: true,
+        message: '영업 중인 사업자로 확인되었습니다.',
+        status: 'active',
+        data: {
+          b_no: bizInfo.b_no,
+          b_stt: statusName,
+          tax_type: taxType,
+        },
+      });
+    } else if (statusCode === '02') {
+      return res.json({
+        success: false,
+        message: '휴업 중인 사업자입니다. 영업 중인 사업자만 가입할 수 있습니다.',
+        status: 'suspended',
+      });
+    } else if (statusCode === '03') {
+      return res.json({
+        success: false,
+        message: '폐업된 사업자입니다. 영업 중인 사업자만 가입할 수 있습니다.',
+        status: 'closed',
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: '사업자 상태를 확인할 수 없습니다.',
+        status: 'unknown',
+      });
+    }
+
+  } catch (err) {
+    console.error('사업자번호 조회 오류:', err);
+    res.status(500).json({ success: false, message: '사업자번호 조회 중 오류가 발생했습니다.' });
+  }
+});
+
 // ========== 회원가입 ==========
 router.post('/signup', async (req, res) => {
   try {
@@ -66,7 +165,7 @@ router.post('/signup', async (req, res) => {
     } = req.body;
 
     // 필수값 검증
-    if (!username || !password || !name || !birthdate || !phone || !email) {
+    if (!username || !password || !name || !birthdate || !phone || !email || !business_number) {
       return res.status(400).json({ success: false, message: '필수 항목을 모두 입력해주세요.' });
     }
 
@@ -74,6 +173,12 @@ router.post('/signup', async (req, res) => {
     if (password.length < 8) {
       return res.status(400).json({ success: false, message: '비밀번호는 8자 이상이어야 합니다.' });
     }
+
+    // 사업자번호 형식 검증
+    const cleanBizNum = business_number.replace(/[^0-9]/g, '');
+    if (cleanBizNum.length !== 10) {
+      return res.status(400).json({ success: false, message: '유효한 사업자번호를 입력해주세요.' });
+}
 
     // 다음메일 차단
     if (email.endsWith('@daum.net') || email.endsWith('@hanmail.net')) {
