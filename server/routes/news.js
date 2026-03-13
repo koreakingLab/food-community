@@ -43,6 +43,39 @@ const fetchFromNaver = async (query, display, start, sort) => {
   };
 };
 
+// 홈 프리뷰용 — 여러 키워드 결과를 합쳐서 반환
+router.get('/home-preview', async (req, res) => {
+  try {
+    const keywords = ['식품제조', '식품산업', 'HACCP', '식품업계'];
+    
+    // 각 키워드로 2개씩 가져오기
+    const results = await Promise.all(
+      keywords.map(kw => fetchFromNaver(kw, 2, 1, 'date').catch(() => ({ articles: [] })))
+    );
+    
+    // 합치고 중복 제거 (link 기준)
+    const seen = new Set();
+    const merged = [];
+    for (const r of results) {
+      for (const article of r.articles) {
+        if (!seen.has(article.link)) {
+          seen.add(article.link);
+          merged.push(article);
+        }
+      }
+    }
+    
+    // 최신순 정렬 후 5개만
+    merged.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    const articles = merged.slice(0, 5);
+    
+    res.json({ success: true, articles });
+  } catch (err) {
+    console.error('홈 뉴스 프리뷰 실패:', err);
+    res.status(500).json({ success: false, message: '뉴스를 불러오지 못했습니다.' });
+  }
+});
+
 // 캐시 키 생성
 const getCacheKey = (query, display, start, sort) =>
   `${query}_${display}_${start}_${sort}`;
