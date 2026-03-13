@@ -8,22 +8,21 @@ function NewsPreview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const query = encodeURIComponent('"식품제조" OR "식품산업" OR "식품업계" OR "HACCP"');
-        const res = await fetch(`${API_BASE}/api/news/search?query=${query}&display=5&sort=date`);
-        const json = await res.json();
-        if (json.success) {
-          setArticles(json.articles);
-        }
-      } catch (err) {
-        console.error('뉴스 로딩 실패:', err);
-      } finally {
-        setLoading(false);
+  const fetchNews = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/news/home-preview`);
+      const json = await res.json();
+      if (json.success) {
+        setArticles(json.articles);
       }
-    };
-    fetchNews();
-  }, []);
+    } catch (err) {
+      console.error('뉴스 로딩 실패:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchNews();
+}, []);
 
   // 날짜 포맷
   const formatDate = (dateStr) => {
