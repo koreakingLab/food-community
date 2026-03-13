@@ -268,7 +268,7 @@ setInterval(syncHaccpData, 24 * 60 * 60 * 1000);
 // ===== API 엔드포인트 (Supabase에서 조회) =====
 
 // 목록 조회
-router.get('/api/haccp', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { pageNo = 1, numOfRows = 20, search = '' } = req.query;
     const page = Number(pageNo);
@@ -321,7 +321,7 @@ router.get('/api/haccp', async (req, res) => {
 });
 
 // 업체 상세 조회
-router.get('/api/haccp/company', async (req, res) => {
+router.get('/company', async (req, res) => {
   try {
     const { name } = req.query;
     if (!name) return res.status(400).json({ error: '업체명이 필요합니다.', items: [] });
@@ -359,7 +359,7 @@ router.get('/api/haccp/company', async (req, res) => {
 });
 
 // 동기화 상태 확인
-router.get('/api/haccp/status', async (req, res) => {
+router.get('/status', async (req, res) => {
   const { count } = await supabase
     .from('haccp_companies')
     .select('*', { count: 'exact', head: true });
@@ -371,7 +371,7 @@ router.get('/api/haccp/status', async (req, res) => {
 });
 
 // 수동 동기화 트리거
-router.post('/api/haccp/sync', (req, res) => {
+router.post('/sync', (req, res) => {
   syncHaccpData();
   res.json({ message: '동기화가 시작되었습니다.' });
 });

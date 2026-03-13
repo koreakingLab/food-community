@@ -43,9 +43,15 @@ const fetchFromNaver = async (query, display, start, sort) => {
   };
 };
 
+let homePreviewCache = null;
+
 // 홈 프리뷰용 — 여러 키워드 결과를 합쳐서 반환
 router.get('/home-preview', async (req, res) => {
   try {
+    if (homePreviewCache && (Date.now() - homePreviewCache.timestamp < CACHE_DURATION)) {
+      return res.json({ success: true, articles: homePreviewCache.articles, cached: true });
+    }
+
     const keywords = ['식품제조', '식품산업', 'HACCP', '식품업계'];
     
     // 각 키워드로 2개씩 가져오기
@@ -69,8 +75,16 @@ router.get('/home-preview', async (req, res) => {
     merged.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
     const articles = merged.slice(0, 5);
     
-    res.json({ success: true, articles });
+    homePreviewCache = {
+      articles,
+      timestamp: Date.now()
+    };
+    
+    res.json({ success: true, articles, cached: false });
   } catch (err) {
+    if (homePreviewCache) {
+      return res.json({ success: true, articles: homePreviewCache.articles, cached: true, stale: true });
+    }
     console.error('홈 뉴스 프리뷰 실패:', err);
     res.status(500).json({ success: false, message: '뉴스를 불러오지 못했습니다.' });
   }

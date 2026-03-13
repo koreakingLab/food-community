@@ -5,7 +5,7 @@ const axios = require('axios');
 const app = express();
 const haccpRoutes = require('./routes/haccp');
 const cron = require('node-cron');
-const smartNoticesRouter = require('./routes/smartNotices');
+const { router: smartNoticesRouter, syncSmartNoticesData } = require('./routes/smartNotices');
 const newsRoutes = require('./routes/news');
 
 // ===== 미들웨어 =====
@@ -16,15 +16,14 @@ app.use(cors({
   ]
 }));
 app.use(express.json());
-app.use(haccpRoutes);   
+app.use('/api/haccp', haccpRoutes);   
 // ===== 기존 라우트 =====
 app.use('/api/auth', require('./routes/auth').router);
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/prices', require('./routes/prices'));
-app.use('/api/news', require('./routes/news'));
+app.use('/api/news', newsRoutes);
 app.use('/api/smart-notices', smartNoticesRouter);
 app.use('/api/mypage', require('./routes/mypage'));
-app.use('/api/news', newsRoutes);
 
 // ============================================
 // ===== KAMIS API (농산물유통정보) 연동 =====
@@ -159,13 +158,11 @@ app.listen(PORT, () => {
 
 // 매일 오전 7시, 오후 1시에 동기화
 cron.schedule('0 7,13 * * *', async () => {
-  console.log('📡 스마트제조 공고 동기화 시작...');
+  console.log('📡 스마트제조 공고 자동 동기화 시작...');
   try {
-    await axios(`${process.env.SERVER_URL}/api/smart-notices/sync`, {
-      method: 'POST'
-    });
-    console.log('✅ 동기화 완료');
+    await syncSmartNoticesData();
+    console.log('✅ 자동 동기화 완료');
   } catch (err) {
-    console.error('❌ 동기화 실패:', err);
+    console.error('❌ 자동 동기화 실패:', err);
   }
 });

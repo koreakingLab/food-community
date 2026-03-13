@@ -45,88 +45,82 @@ function isThisYear(notice) {
   return false;
 }
 
+// ✅ 외부에서 직접 호출할 수 있는 분리된 동기화 함수
+async function syncSmartNoticesData() {
+  const API_KEY = process.env.BIZINFO_API_KEY;
+  if (!API_KEY) throw new Error('BIZINFO_API_KEY 환경변수가 설정되지 않았습니다.');
+
+  const apiUrl = `https://www.bizinfo.go.kr/uss/rss/bizinfoApi.do?dataType=json&searchCnt=0&crtfcKey=${API_KEY}`;
+  console.log('[SmartNotices] 기업마당 API 호출 시작...');
+  const response = await axios(apiUrl, { timeout: 30000 });
+  const data = response.data;
+
+  const allNotices = data?.jsonArray || [];
+  console.log(`[SmartNotices] 전체 공고 수: ${allNotices.length}`);
+
+  const thisYearNotices = allNotices.filter(isThisYear);
+  console.log(`[SmartNotices] 올해 공고 수: ${thisYearNotices.length}`);
+
+  const smartNotices = thisYearNotices.filter(isSmartManufacturing);
+  console.log(`[SmartNotices] 스마트제조 관련 공고 수: ${smartNotices.length}`);
+
+  const upsertData = smartNotices.map(notice => {
+    const rawDate = notice.reqstBeginEndDe || '';
+    const [beginDe, endDe] = rawDate.split('~').map(d => {
+      const trimmed = d?.trim();
+      if (!trimmed || trimmed.length !== 8 || !/^\d{8}$/.test(trimmed)) return null;
+      return `${trimmed.slice(0, 4)}-${trimmed.slice(4, 6)}-${trimmed.slice(6, 8)}`;
+    });
+
+    return {
+      pblanc_id: notice.pblancId,
+      pblanc_nm: notice.pblancNm,
+      jrsd_instt_nm: notice.jrsdInsttNm,
+      bsns_sumry_cn: notice.bsnsSumryCn,
+      pblanc_url: notice.pblancUrl,
+      reqst_begin_de: beginDe || null,
+      reqst_end_de: endDe || null,
+      reqst_date_raw: rawDate,
+      hash_tags: notice.hashTags,
+      creat_pnttm: notice.creatPnttm,
+      reqst_mth_papers_cn: notice.reqstMthPapersCn || null,
+      refrnc_nm: notice.refrncNm || null,
+      rcept_engn_hmpg_url: notice.rceptEngnHmpgUrl || null,
+      pldir_sport_realm: notice.pldirSportRealmLclasCodeNm || null,
+      updated_at: new Date().toISOString()
+    };
+  });
+
+  let upsertCount = 0;
+  let errorCount = 0;
+
+  if (upsertData.length > 0) {
+    const { error } = await supabase.from('smart_notices').upsert(upsertData, { onConflict: 'pblanc_id' });
+    if (error) {
+      console.error('[SmartNotices] bulk upsert 에러:', error.message);
+      errorCount = upsertData.length;
+    } else {
+      upsertCount = upsertData.length;
+    }
+  }
+
+  const result = {
+    total: allNotices.length,
+    thisYear: thisYearNotices.length,
+    smartFiltered: smartNotices.length,
+    upserted: upsertCount,
+    errors: errorCount
+  };
+  
+  console.log('[SmartNotices] 동기화 완료:', result);
+  return result;
+}
+
 // ✅ 동기화 API (올해 + 스마트제조 키워드 필터링)
 router.post('/sync', async (req, res) => {
   try {
-    const API_KEY = process.env.BIZINFO_API_KEY;
-    
-    if (!API_KEY) {
-      return res.status(500).json({ 
-        success: false, 
-        error: 'BIZINFO_API_KEY 환경변수가 설정되지 않았습니다.' 
-      });
-    }
-
-    const apiUrl = `https://www.bizinfo.go.kr/uss/rss/bizinfoApi.do?dataType=json&searchCnt=0&crtfcKey=${API_KEY}`;
-
-    console.log('[SmartNotices] 기업마당 API 호출 시작...');
-    const response = await axios(apiUrl, { timeout: 30000 });
-    const data = response.data;
-
-    const allNotices = data?.jsonArray || [];
-    console.log(`[SmartNotices] 전체 공고 수: ${allNotices.length}`);
-
-    // 1차: 올해 공고만 필터링
-    const thisYearNotices = allNotices.filter(isThisYear);
-    console.log(`[SmartNotices] 올해 공고 수: ${thisYearNotices.length}`);
-
-    // 2차: 스마트제조 키워드 필터링
-    const smartNotices = thisYearNotices.filter(isSmartManufacturing);
-    console.log(`[SmartNotices] 스마트제조 관련 공고 수: ${smartNotices.length}`);
-
-    let upsertCount = 0;
-    let errorCount = 0;
-
-    for (const notice of smartNotices) {
-      const rawDate = notice.reqstBeginEndDe || '';
-      const [beginDe, endDe] = rawDate
-        .split('~')
-        .map(d => {
-          const trimmed = d?.trim();
-          if (!trimmed || trimmed.length !== 8 || !/^\d{8}$/.test(trimmed)) return null;
-          return `${trimmed.slice(0, 4)}-${trimmed.slice(4, 6)}-${trimmed.slice(6, 8)}`;
-        });
-
-      const { error } = await supabase
-        .from('smart_notices')
-        .upsert({
-          pblanc_id: notice.pblancId,
-          pblanc_nm: notice.pblancNm,
-          jrsd_instt_nm: notice.jrsdInsttNm,
-          bsns_sumry_cn: notice.bsnsSumryCn,
-          pblanc_url: notice.pblancUrl,
-          reqst_begin_de: beginDe || null,
-          reqst_end_de: endDe || null,
-          reqst_date_raw: rawDate,
-          hash_tags: notice.hashTags,
-          creat_pnttm: notice.creatPnttm,
-          reqst_mth_papers_cn: notice.reqstMthPapersCn || null,
-          refrnc_nm: notice.refrncNm || null,
-          rcept_engn_hmpg_url: notice.rceptEngnHmpgUrl || null,
-          pldir_sport_realm: notice.pldirSportRealmLclasCodeNm || null,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'pblanc_id' });
-
-      if (error) {
-        console.error(`[SmartNotices] upsert 에러 (${notice.pblancId}):`, error.message);
-        errorCount++;
-      } else {
-        upsertCount++;
-      }
-    }
-
-    const result = {
-      success: true,
-      total: allNotices.length,
-      thisYear: thisYearNotices.length,
-      smartFiltered: smartNotices.length,
-      upserted: upsertCount,
-      errors: errorCount
-    };
-
-    console.log('[SmartNotices] 동기화 완료:', result);
-    res.json(result);
-
+    const result = await syncSmartNoticesData();
+    res.json({ success: true, ...result });
   } catch (err) {
     console.error('[SmartNotices] 동기화 오류:', err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -193,4 +187,4 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = { router, syncSmartNoticesData };

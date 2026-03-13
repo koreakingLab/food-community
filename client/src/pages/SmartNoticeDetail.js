@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { IconNewspaper, IconPen } from './components/Icons';
+import { IconNewspaper, IconPen } from '../components/Icons';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://food-community-production.up.railway.app';
 
